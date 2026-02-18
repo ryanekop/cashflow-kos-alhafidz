@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Rizki",
+    "status": "none"
+  },
+  {
+    "id": 2,
+    "name": "Angga",
+    "status": "full"
+  },
+  {
+    "id": 3,
+    "name": "Januar Pandu",
+    "status": "full"
+  },
+  {
+    "id": 4,
+    "name": "Maulana",
+    "status": "full"
+  },
+  {
+    "id": 5,
+    "name": "Ferrel",
+    "status": "half"
+  },
+  {
+    "id": 6,
+    "name": "Juan",
+    "status": "none"
+  },
+  {
+    "id": 7,
+    "name": "Dirga",
+    "status": "half"
+  },
+  {
+    "id": 8,
+    "name": "Vicki",
+    "status": "full"
+  },
+  {
+    "id": 9,
+    "name": "Ryan Eko",
+    "status": "full"
+  },
+  {
+    "id": 10,
+    "name": "Riksa",
+    "status": "full"
+  },
+  {
+    "id": 11,
+    "name": "Elang",
+    "status": "half"
+  },
+  {
+    "id": 12,
+    "name": "Graend",
+    "status": "full"
+  }
+]

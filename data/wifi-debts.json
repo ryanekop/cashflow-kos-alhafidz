@@ -1,0 +1,72 @@
+[
+    {
+        "id": 1,
+        "memberId": 2,
+        "memberName": "Angga",
+        "month": "2024-12",
+        "amount": 30200
+    },
+    {
+        "id": 3,
+        "memberId": 2,
+        "memberName": "Angga",
+        "month": "2025-03",
+        "amount": 43600
+    },
+    {
+        "id": 4,
+        "memberId": 2,
+        "memberName": "Angga",
+        "month": "2025-04",
+        "amount": 27750
+    },
+    {
+        "id": 5,
+        "memberId": 2,
+        "memberName": "Angga",
+        "month": "2025-05",
+        "amount": 27750
+    },
+    {
+        "id": 6,
+        "memberId": 3,
+        "memberName": "Januar Pandu",
+        "month": "2025-10",
+        "amount": 39387
+    },
+    {
+        "id": 9,
+        "memberId": 4,
+        "memberName": "Maulana",
+        "month": "2025-11",
+        "amount": 38156
+    },
+    {
+        "id": 10,
+        "memberId": 3,
+        "memberName": "Januar Pandu",
+        "month": "2025-11",
+        "amount": 38156
+    },
+    {
+        "id": 11,
+        "memberId": 6,
+        "memberName": "Juan",
+        "month": "2025-12",
+        "amount": 48840
+    },
+    {
+        "id": 12,
+        "memberId": 8,
+        "memberName": "Vicki",
+        "month": "2025-12",
+        "amount": 36630
+    },
+    {
+        "id": 13,
+        "memberId": 3,
+        "memberName": "Januar Pandu",
+        "month": "2025-12",
+        "amount": 48840
+    }
+]
