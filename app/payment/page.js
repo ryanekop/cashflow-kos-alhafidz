@@ -19,19 +19,6 @@ function calculateKas(monthStr, status) {
 
 const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
 
-function generateMonthOptions() {
-    const options = [];
-    const now = new Date();
-    for (let i = -12; i <= 6; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        const val = d.toISOString().slice(0, 7);
-        const label = d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
-        options.push({ value: val, label });
-    }
-    return options;
-}
-const MONTH_OPTIONS = generateMonthOptions();
-
 const WA_NUMBER = "6283846451376";
 
 export default function PaymentPage() {
@@ -259,8 +246,8 @@ export default function PaymentPage() {
                         <div className="flex items-center justify-between">
                             <span className="text-[11px] text-gray-400 font-medium">{kasEntries.length > 1 ? `Kas #${i + 1}` : ''}</span>
                             {entry.month && (
-                                <button onClick={() => removeKasEntry(i)} className="text-gray-300 hover:text-red-400 transition-colors flex items-center gap-1 text-[11px]">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                <button onClick={() => removeKasEntry(i)} className="px-2 py-0.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center gap-1 text-[11px] font-medium border border-red-200">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                                     Hapus
                                 </button>
                             )}
@@ -268,10 +255,7 @@ export default function PaymentPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
-                                <select value={entry.month} onChange={e => updateKasEntry(i, "month", e.target.value)} className={inputCls}>
-                                    <option value="">Pilih Bulan...</option>
-                                    {MONTH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                </select>
+                                <input type="month" value={entry.month} onChange={e => updateKasEntry(i, "month", e.target.value)} className={inputCls} />
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1.5">Status</label>
@@ -319,18 +303,15 @@ export default function PaymentPage() {
                         <div className="flex items-center justify-between">
                             <span className="text-[11px] text-gray-400 font-medium">{wifiEntries.length > 1 ? `WiFi #${i + 1}` : ''}</span>
                             {entry.month && (
-                                <button onClick={() => removeWifiEntry(i)} className="text-gray-300 hover:text-red-400 transition-colors flex items-center gap-1 text-[11px]">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                <button onClick={() => removeWifiEntry(i)} className="px-2 py-0.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center gap-1 text-[11px] font-medium border border-red-200">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                                     Hapus
                                 </button>
                             )}
                         </div>
                         <div>
                             <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
-                            <select value={entry.month} onChange={e => updateWifiEntry(i, "month", e.target.value)} className={inputCls}>
-                                <option value="">Pilih Bulan...</option>
-                                {MONTH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                            </select>
+                            <input type="month" value={entry.month} onChange={e => updateWifiEntry(i, "month", e.target.value)} className={inputCls} />
                         </div>
                         {entry.month && selectedMember && (() => {
                             const usage = getWifiStatus(entry);
