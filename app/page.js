@@ -317,8 +317,8 @@ export default function DashboardPage() {
             <tbody>
               {currentRekap.map((row, idx) => (
                 <tr key={row.member.id} className="border-t border-gray-50">
-                  <td className="py-2 px-2 text-gray-400 sticky left-0 bg-white">{idx + 1}</td>
-                  <td className="py-2 px-2 font-medium text-gray-700 sticky left-8 bg-white">{row.member.name}</td>
+                  <td className="py-2 px-2 text-gray-400 sticky left-0 bg-white z-10">{idx + 1}</td>
+                  <td className="py-2 px-2 font-medium text-gray-700 sticky left-8 bg-white z-10">{row.member.name}</td>
                   {MONTHS.map((_, i) => {
                     const val = row[`m${i}`];
                     return (
