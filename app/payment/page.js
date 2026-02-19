@@ -239,7 +239,7 @@ export default function PaymentPage() {
                                 </button>
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
                                 <input type="month" value={entry.month} onChange={e => updateKasEntry(i, "month", e.target.value)} className={inputCls} />
@@ -358,7 +358,7 @@ export default function PaymentPage() {
             {/* ===== PAYMENT METHOD ===== */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-gray-700">Metode Pembayaran</h3>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-2.5">
                     {paymentMethods.map(m => (
                         <button key={m.id} onClick={() => setPaymentMethod(m.id)}
                             className={`p-3 rounded-lg border text-left transition-all ${paymentMethod === m.id

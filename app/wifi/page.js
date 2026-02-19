@@ -106,7 +106,7 @@ export default function WifiPage() {
                     </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
                         <input type="month" value={month} onChange={e => setMonth(e.target.value)} className={inputCls} />
