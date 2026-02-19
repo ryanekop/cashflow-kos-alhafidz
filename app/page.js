@@ -289,22 +289,20 @@ export default function DashboardPage() {
 
       {/* ===== REKAP TABLE ===== */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700">Rekap Pembayaran {year}</h3>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-              <button onClick={() => setActiveRekap("kas")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "kas" ? "bg-white text-[#4f6ef7] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Kas</button>
-              <button onClick={() => setActiveRekap("wifi")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "wifi" ? "bg-white text-[#7c5cfc] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>WiFi</button>
-            </div>
-            <div className="flex gap-1">
-              <button onClick={() => setYear(y => y - 1)} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">←</button>
-              <span className="text-xs text-gray-500 font-medium w-10 text-center leading-7">{year}</span>
-              <button onClick={() => setYear(y => y + 1)} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">→</button>
-            </div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Rekap Pembayaran {year}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+            <button onClick={() => setActiveRekap("kas")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "kas" ? "bg-white text-[#4f6ef7] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Kas</button>
+            <button onClick={() => setActiveRekap("wifi")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "wifi" ? "bg-white text-[#7c5cfc] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>WiFi</button>
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setYear(y => y - 1)} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">←</button>
+            <span className="text-xs text-gray-500 font-medium w-10 text-center leading-7">{year}</span>
+            <button onClick={() => setYear(y => y + 1)} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">→</button>
           </div>
         </div>
 
-        <div className="overflow-x-auto -mx-5 px-5">
+        <div className="overflow-x-auto no-scrollbar -mx-5 px-5">
           <table className="w-full text-xs min-w-[700px]">
             <thead>
               <tr>
