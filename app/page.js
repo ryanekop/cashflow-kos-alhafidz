@@ -302,12 +302,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto no-scrollbar -mx-5 px-5">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-xs min-w-[700px]">
             <thead>
               <tr>
-                <th className="text-left py-2 px-2 text-gray-400 font-medium sticky left-0 bg-white z-10">No.</th>
-                <th className="text-left py-2 px-2 text-gray-400 font-medium sticky left-8 bg-white z-10 min-w-[100px]">Nama</th>
+                <th className="text-left py-2 px-2 text-gray-400 font-medium">No.</th>
+                <th className="text-left py-2 px-2 text-gray-400 font-medium min-w-[100px]">Nama</th>
                 {MONTHS.map((m, i) => (
                   <th key={i} className={`text-center py-2 px-1.5 font-medium min-w-[42px] ${new Date().getMonth() === i && new Date().getFullYear() === year ? "text-[#4f6ef7]" : "text-gray-400"
                     }`}>{m}</th>
@@ -317,8 +317,8 @@ export default function DashboardPage() {
             <tbody>
               {currentRekap.map((row, idx) => (
                 <tr key={row.member.id} className="border-t border-gray-50">
-                  <td className="py-2 px-2 text-gray-400 sticky left-0 bg-white z-10">{idx + 1}</td>
-                  <td className="py-2 px-2 font-medium text-gray-700 sticky left-8 bg-white z-10">{row.member.name}</td>
+                  <td className="py-2 px-2 text-gray-400">{idx + 1}</td>
+                  <td className="py-2 px-2 font-medium text-gray-700">{row.member.name}</td>
                   {MONTHS.map((_, i) => {
                     const val = row[`m${i}`];
                     return (
