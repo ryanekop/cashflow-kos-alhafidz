@@ -14,6 +14,18 @@ export default function WifiPage() {
 
     const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
 
+    const monthOptions = (() => {
+        const options = [];
+        const now = new Date();
+        for (let i = -12; i <= 6; i++) {
+            const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+            const val = d.toISOString().slice(0, 7);
+            const label = d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+            options.push({ value: val, label });
+        }
+        return options;
+    })();
+
     useEffect(() => {
         Promise.all([
             fetch("/api/members").then(r => r.json()),
@@ -109,7 +121,10 @@ export default function WifiPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
-                        <input type="month" value={month} onChange={e => setMonth(e.target.value)} className={inputCls} />
+                        <select value={month} onChange={e => setMonth(e.target.value)} className={inputCls}>
+                            <option value="">Pilih Bulan...</option>
+                            {monthOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
                     </div>
                     <div>
                         <label className="block text-xs text-gray-500 mb-1.5">Pakai WiFi bulan ini?</label>

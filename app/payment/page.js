@@ -19,6 +19,19 @@ function calculateKas(monthStr, status) {
 
 const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
 
+function generateMonthOptions() {
+    const options = [];
+    const now = new Date();
+    for (let i = -12; i <= 6; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const val = d.toISOString().slice(0, 7);
+        const label = d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+        options.push({ value: val, label });
+    }
+    return options;
+}
+const MONTH_OPTIONS = generateMonthOptions();
+
 const WA_NUMBER = "6283846451376";
 
 export default function PaymentPage() {
@@ -108,7 +121,13 @@ export default function PaymentPage() {
 
     // Add/remove entries
     const addKasEntry = () => setKasEntries([...kasEntries, { month: "", status: "full" }]);
-    const removeKasEntry = (i) => setKasEntries(kasEntries.filter((_, idx) => idx !== i));
+    const removeKasEntry = (i) => {
+        if (kasEntries.length <= 1) {
+            setKasEntries([{ month: "", status: "full" }]);
+        } else {
+            setKasEntries(kasEntries.filter((_, idx) => idx !== i));
+        }
+    };
     const updateKasEntry = (i, field, val) => {
         const entries = [...kasEntries];
         entries[i] = { ...entries[i], [field]: val };
@@ -116,7 +135,13 @@ export default function PaymentPage() {
     };
 
     const addWifiEntry = () => setWifiEntries([...wifiEntries, { month: "" }]);
-    const removeWifiEntry = (i) => setWifiEntries(wifiEntries.filter((_, idx) => idx !== i));
+    const removeWifiEntry = (i) => {
+        if (wifiEntries.length <= 1) {
+            setWifiEntries([{ month: "" }]);
+        } else {
+            setWifiEntries(wifiEntries.filter((_, idx) => idx !== i));
+        }
+    };
     const updateWifiEntry = (i, field, val) => {
         const entries = [...wifiEntries];
         entries[i] = { ...entries[i], [field]: val };
@@ -231,18 +256,22 @@ export default function PaymentPage() {
 
                 {kasEntries.map((entry, i) => (
                     <div key={i} className="space-y-2">
-                        {kasEntries.length > 1 && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-gray-400 font-medium">Kas #{i + 1}</span>
-                                <button onClick={() => removeKasEntry(i)} className="text-gray-300 hover:text-red-400 transition-colors">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-gray-400 font-medium">{kasEntries.length > 1 ? `Kas #${i + 1}` : ''}</span>
+                            {entry.month && (
+                                <button onClick={() => removeKasEntry(i)} className="text-gray-300 hover:text-red-400 transition-colors flex items-center gap-1 text-[11px]">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    Hapus
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
-                                <input type="month" value={entry.month} onChange={e => updateKasEntry(i, "month", e.target.value)} className={inputCls} />
+                                <select value={entry.month} onChange={e => updateKasEntry(i, "month", e.target.value)} className={inputCls}>
+                                    <option value="">Pilih Bulan...</option>
+                                    {MONTH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-500 mb-1.5">Status</label>
@@ -287,17 +316,21 @@ export default function PaymentPage() {
 
                 {wifiEntries.map((entry, i) => (
                     <div key={i} className="space-y-2">
-                        {wifiEntries.length > 1 && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11px] text-gray-400 font-medium">WiFi #{i + 1}</span>
-                                <button onClick={() => removeWifiEntry(i)} className="text-gray-300 hover:text-red-400 transition-colors">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-gray-400 font-medium">{wifiEntries.length > 1 ? `WiFi #${i + 1}` : ''}</span>
+                            {entry.month && (
+                                <button onClick={() => removeWifiEntry(i)} className="text-gray-300 hover:text-red-400 transition-colors flex items-center gap-1 text-[11px]">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                                    Hapus
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
                         <div>
                             <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
-                            <input type="month" value={entry.month} onChange={e => updateWifiEntry(i, "month", e.target.value)} className={inputCls} />
+                            <select value={entry.month} onChange={e => updateWifiEntry(i, "month", e.target.value)} className={inputCls}>
+                                <option value="">Pilih Bulan...</option>
+                                {MONTH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                            </select>
                         </div>
                         {entry.month && selectedMember && (() => {
                             const usage = getWifiStatus(entry);
