@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": 1771844447965,
+    "memberId": 5,
+    "memberName": "Ferrel",
+    "month": "2026-02",
+    "level": "half",
+    "date": "2026-02-23T11:00:47.965Z"
+  },
+  {
+    "id": 1771847567931,
+    "memberId": 3,
+    "memberName": "Januar Pandu",
+    "month": "2026-02",
+    "level": "half",
+    "date": "2026-02-23T11:52:47.931Z"
+  },
+  {
+    "id": 1771849910720,
+    "memberId": 8,
+    "memberName": "Vicki",
+    "month": "2026-02",
+    "level": "full",
+    "date": "2026-02-23T12:31:50.936Z"
+  },
+  {
+    "id": 1771884345761,
+    "memberId": 9,
+    "memberName": "Ryan Eko",
+    "month": "2026-02",
+    "level": "full",
+    "date": "2026-02-23T22:05:45.761Z"
+  }
+]
