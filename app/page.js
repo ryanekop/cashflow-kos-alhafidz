@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -18,6 +19,24 @@ function formatIDRShort(n) {
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.45, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.5 } },
+};
 
 export default function DashboardPage() {
   const [data, setData] = useState(null);
@@ -113,20 +132,39 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-gray-800">Dashboard</h1>
+      <motion.h1
+        className="text-xl font-semibold text-gray-800"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        Dashboard
+      </motion.h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {cards.map((card, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <motion.div
+            key={i}
+            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
+            variants={fadeUp}
+            custom={i}
+            whileHover={{ y: -4, boxShadow: "0 8px 25px rgba(0,0,0,0.08)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-gray-500 font-medium">{card.title}</span>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: card.bg, color: card.color }}>{card.icon}</div>
             </div>
             <p className="text-xl font-semibold text-gray-800">{card.value}</p>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* ===== TUNGGAKAN (ARREARS) ===== */}
       {(() => {
@@ -212,12 +250,29 @@ export default function DashboardPage() {
         arrears.sort((a, b) => (b.totalKas + b.totalWifi) - (a.totalKas + a.totalWifi));
 
         return (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5">
+          <motion.div
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
             <h3 className="text-sm font-semibold text-gray-700 mb-1">Tunggakan Pembayaran</h3>
             <p className="text-xs text-gray-400 mb-4">Member yang belum bayar kas atau WiFi</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {arrears.map(a => (
-                <div key={a.member.id} className="rounded-xl border border-red-100 overflow-hidden">
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
+              {arrears.map((a, idx) => (
+                <motion.div
+                  key={a.member.id}
+                  className="rounded-xl border border-red-100 overflow-hidden"
+                  variants={fadeUp}
+                  custom={idx}
+                  whileHover={{ scale: 1.02, boxShadow: "0 4px 16px rgba(239,68,68,0.1)" }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   {/* Header */}
                   <div className="flex items-center justify-between px-3.5 py-2.5 bg-red-50/70">
                     <div className="flex items-center gap-2">
@@ -263,15 +318,20 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         );
       })()}
 
       {/* Chart Kas */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <motion.div
+        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Pemasukan Kas</h3>
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -285,10 +345,15 @@ export default function DashboardPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </motion.div>
 
       {/* ===== REKAP TABLE ===== */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <motion.div
+        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Rekap Pembayaran {year}</h3>
         <div className="flex items-center justify-between mb-4">
           <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
@@ -316,7 +381,13 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {currentRekap.map((row, idx) => (
-                <tr key={row.member.id} className="border-t border-gray-50">
+                <motion.tr
+                  key={row.member.id}
+                  className="border-t border-gray-50"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.03 }}
+                >
                   <td className="py-2 px-2 text-gray-400 sticky left-0 bg-white z-20">{idx + 1}</td>
                   <td className="py-2 px-2 font-medium text-gray-700 sticky left-[36px] bg-white z-20" style={{ boxShadow: '4px 0 8px -2px rgba(0,0,0,0.06)' }}>{row.member.name}</td>
                   {MONTHS.map((_, i) => {
@@ -329,7 +400,7 @@ export default function DashboardPage() {
                       </td>
                     );
                   })}
-                </tr>
+                </motion.tr>
               ))}
               {members.length === 0 && (
                 <tr><td colSpan={14} className="py-8 text-center text-gray-400">Belum ada member.</td></tr>
@@ -337,10 +408,15 @@ export default function DashboardPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* ===== TIMELINE KAS ===== */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5">
+      <motion.div
+        className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+      >
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Timeline Kas {year}</h3>
         {(() => {
           const yearTxs = timeline.filter(tx => new Date(tx.date).getFullYear() === year);
@@ -372,11 +448,22 @@ export default function DashboardPage() {
           });
 
           return (
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
               {groups.map((g, i) => {
                 const isExpense = g.type === "pengeluaran";
                 return (
-                  <div key={i} className={`p-3 rounded-lg ${isExpense ? "bg-red-50/50" : "bg-gray-50"}`}>
+                  <motion.div
+                    key={i}
+                    className={`p-3 rounded-lg ${isExpense ? "bg-red-50/50" : "bg-gray-50"}`}
+                    variants={fadeUp}
+                    custom={i}
+                    whileHover={{ x: 4, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold ${isExpense ? "bg-red-100 text-red-500" : g.type === "wifi" ? "bg-purple-50 text-purple-500" : "bg-blue-50 text-[#4f6ef7]"
@@ -416,13 +503,13 @@ export default function DashboardPage() {
                         </div>
                       </>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           );
         })()}
-      </div>
+      </motion.div>
     </div>
   );
 }

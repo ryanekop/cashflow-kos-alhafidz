@@ -1,6 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 24 },
+    visible: (i = 0) => ({
+        opacity: 1, y: 0,
+        transition: { duration: 0.45, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] },
+    }),
+};
+
+const staggerContainer = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.06 } },
+};
 
 export default function WifiPage() {
     const [members, setMembers] = useState([]);
@@ -77,27 +91,61 @@ export default function WifiPage() {
 
     return (
         <div className="max-w-lg mx-auto space-y-5">
-            {popup && (
-                <div className="modal-overlay" onClick={() => setPopup(null)}>
-                    <div className="modal-box" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-base font-semibold text-gray-800 mb-2">{popup.title}</h3>
-                        <p className="text-sm text-gray-600 mb-4">{popup.message}</p>
-                        <button onClick={() => setPopup(null)} className="w-full py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors">Tutup</button>
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {popup && (
+                    <motion.div
+                        className="modal-overlay"
+                        onClick={() => setPopup(null)}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <motion.div
+                            className="modal-box"
+                            onClick={e => e.stopPropagation()}
+                            initial={{ opacity: 0, scale: 0.85, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.85, y: 20 }}
+                            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                        >
+                            <h3 className="text-base font-semibold text-gray-800 mb-2">{popup.title}</h3>
+                            <p className="text-sm text-gray-600 mb-4">{popup.message}</p>
+                            <button onClick={() => setPopup(null)} className="w-full py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors">Tutup</button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {successMsg && (
-                <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">✓ {successMsg}</div>
-            )}
+            <AnimatePresence>
+                {successMsg && (
+                    <motion.div
+                        className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm"
+                        initial={{ opacity: 0, y: -20, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: "auto" }}
+                        exit={{ opacity: 0, y: -20, height: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    >
+                        ✓ {successMsg}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            <div className="text-center">
+            <motion.div
+                className="text-center"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
                 <h1 className="text-xl font-semibold text-gray-800">Isi Pemakaian WiFi</h1>
                 <p className="text-sm text-gray-400 mt-1">Isi apakah kamu pakai WiFi bulan ini</p>
-            </div>
+            </motion.div>
 
             {/* Form */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+            <motion.div
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4"
+                variants={fadeUp} custom={0} initial="hidden" animate="visible"
+            >
                 <div>
                     <label className="block text-xs text-gray-500 mb-1.5">Siapa kamu?</label>
                     <select value={selectedMember} onChange={e => setSelectedMember(e.target.value)} className={inputCls}>
@@ -120,65 +168,117 @@ export default function WifiPage() {
                     </div>
                 </div>
 
-                <button onClick={handleSubmit} className="w-full py-2.5 rounded-lg bg-[#7c5cfc] text-white text-sm font-medium hover:bg-[#6b4fe0] transition-colors">
+                <motion.button
+                    onClick={handleSubmit}
+                    className="w-full py-2.5 rounded-lg bg-[#7c5cfc] text-white text-sm font-medium hover:bg-[#6b4fe0] transition-colors"
+                    whileTap={{ scale: 0.97 }}
+                    whileHover={{ boxShadow: "0 6px 20px rgba(124,92,252,0.3)" }}
+                >
                     Simpan Pemakaian WiFi
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
             {/* Preview */}
-            {bill && (fullUsers + halfUsers) > 0 && selectedMember && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" />
-                        </svg>
-                        Perkiraan Tagihan WiFi
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                        <div className="flex justify-between text-gray-500">
-                            <span>Total tagihan bulan ini</span>
-                            <span className="font-medium text-gray-700">{formatIDR(bill.amount)}</span>
+            <AnimatePresence>
+                {bill && (fullUsers + halfUsers) > 0 && selectedMember && (
+                    <motion.div
+                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" />
+                            </svg>
+                            Perkiraan Tagihan WiFi
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between text-gray-500">
+                                <span>Total tagihan bulan ini</span>
+                                <span className="font-medium text-gray-700">{formatIDR(bill.amount)}</span>
+                            </div>
+                            <div className="flex justify-between text-gray-500">
+                                <span>Pengguna: {fullUsers} full, {halfUsers} setengah</span>
+                                <span className="text-xs text-gray-400">({fullUsers + halfUsers} orang)</span>
+                            </div>
+                            <div className="border-t border-gray-100 pt-2 flex justify-between">
+                                <span className="text-gray-600 font-medium">Kamu bayar</span>
+                                <motion.span
+                                    className="text-lg font-semibold text-gray-800"
+                                    key={previewAmount}
+                                    initial={{ scale: 1.1, color: "#7c5cfc" }}
+                                    animate={{ scale: 1, color: "#1e293b" }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    {formatIDR(previewAmount)}
+                                </motion.span>
+                            </div>
                         </div>
-                        <div className="flex justify-between text-gray-500">
-                            <span>Pengguna: {fullUsers} full, {halfUsers} setengah</span>
-                            <span className="text-xs text-gray-400">({fullUsers + halfUsers} orang)</span>
-                        </div>
-                        <div className="border-t border-gray-100 pt-2 flex justify-between">
-                            <span className="text-gray-600 font-medium">Kamu bayar</span>
-                            <span className="text-lg font-semibold text-gray-800">{formatIDR(previewAmount)}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {!bill && month && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <p className="text-sm text-amber-600 text-center">Tagihan WiFi bulan {month} belum diinput admin</p>
-                </div>
-            )}
+            <AnimatePresence>
+                {!bill && month && (
+                    <motion.div
+                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.4 }}
+                    >
+                        <p className="text-sm text-amber-600 text-center">Tagihan WiFi bulan {month} belum diinput admin</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Who filled in */}
-            {monthUsage.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Yang sudah isi ({month})</h3>
-                    <div className="space-y-1.5">
-                        {monthUsage.map(u => (
-                            <div key={u.id} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 text-sm">
-                                <span className="text-gray-700 font-medium">{u.memberName}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${u.level === "full" ? "bg-blue-50 text-[#4f6ef7] border border-blue-200" : "bg-amber-50 text-amber-600 border border-amber-200"
-                                        }`}>{u.level === "full" ? "FULL" : "SETENGAH"}</span>
-                                    <button onClick={() => handleDeleteUsage(u.id, u.memberName)} className="text-gray-300 hover:text-red-400 transition-colors">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {monthUsage.length > 0 && (
+                    <motion.div
+                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                    >
+                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Yang sudah isi ({month})</h3>
+                        <motion.div
+                            className="space-y-1.5"
+                            variants={staggerContainer}
+                            initial="hidden"
+                            animate="visible"
+                        >
+                            {monthUsage.map((u, idx) => (
+                                <motion.div
+                                    key={u.id}
+                                    className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 text-sm"
+                                    variants={fadeUp}
+                                    custom={idx}
+                                    whileHover={{ x: 4, backgroundColor: "#f0f0f5" }}
+                                >
+                                    <span className="text-gray-700 font-medium">{u.memberName}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${u.level === "full" ? "bg-blue-50 text-[#4f6ef7] border border-blue-200" : "bg-amber-50 text-amber-600 border border-amber-200"
+                                            }`}>{u.level === "full" ? "FULL" : "SETENGAH"}</span>
+                                        <motion.button
+                                            onClick={() => handleDeleteUsage(u.id, u.memberName)}
+                                            className="text-gray-300 hover:text-red-400 transition-colors"
+                                            whileTap={{ scale: 0.85 }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            </svg>
+                                        </motion.button>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

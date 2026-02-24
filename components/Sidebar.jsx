@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 
 const navItems = [
     {
@@ -48,14 +49,40 @@ export default function Sidebar() {
     return (
         <>
             {/* ===== MOBILE: Bottom tab bar ===== */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex">
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 flex">
                 {navItems.map((item) => {
                     const isActive = pathname === item.path;
                     return (
                         <Link key={item.path} href={item.path}
-                            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors ${isActive ? "text-[#4f6ef7]" : "text-gray-400"}`}>
-                            <span className={isActive ? "text-[#4f6ef7]" : "text-gray-400"}>{item.icon}</span>
-                            {item.name}
+                            className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium relative">
+                            <motion.div
+                                className="flex flex-col items-center gap-0.5"
+                                whileTap={{ scale: 0.85 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            >
+                                <span className="relative">
+                                    <motion.span
+                                        className={isActive ? "text-[#4f6ef7]" : "text-gray-400"}
+                                        animate={{ y: isActive ? -2 : 0 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                    >
+                                        {item.icon}
+                                    </motion.span>
+                                </span>
+                                <motion.span
+                                    className={isActive ? "text-[#4f6ef7]" : "text-gray-400"}
+                                    animate={{ opacity: isActive ? 1 : 0.6 }}
+                                >
+                                    {item.name}
+                                </motion.span>
+                            </motion.div>
+                            {isActive && (
+                                <motion.div
+                                    layoutId="mobile-active-pill"
+                                    className="absolute -top-[1px] left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-[#4f6ef7]"
+                                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                                />
+                            )}
                         </Link>
                     );
                 })}
@@ -63,7 +90,12 @@ export default function Sidebar() {
 
             {/* ===== DESKTOP: Left sidebar ===== */}
             <aside className="hidden lg:block fixed inset-y-0 left-0 z-50 w-60 bg-white border-r border-gray-200">
-                <div className="flex items-center gap-2.5 px-5 py-5 border-b border-gray-100">
+                <motion.div
+                    className="flex items-center gap-2.5 px-5 py-5 border-b border-gray-100"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                >
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
                     </svg>
@@ -71,17 +103,31 @@ export default function Sidebar() {
                         <h1 className="text-sm font-semibold text-gray-800">Kos Alhafidz</h1>
                         <p className="text-[11px] text-gray-400">Cashflow Manager</p>
                     </div>
-                </div>
+                </motion.div>
                 <nav className="mt-4 px-3 space-y-0.5">
-                    {navItems.map((item) => {
+                    {navItems.map((item, index) => {
                         const isActive = pathname === item.path;
                         return (
-                            <Link key={item.path} href={item.path}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${isActive ? "bg-[#eef1fe] text-[#4f6ef7] font-medium" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                                    }`}
-                            >
-                                <span className={isActive ? "text-[#4f6ef7]" : "text-gray-400"}>{item.icon}</span>
-                                {item.name}
+                            <Link key={item.path} href={item.path} className="block relative">
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors relative z-10 ${isActive ? "text-[#4f6ef7] font-medium" : "text-gray-500 hover:text-gray-700"
+                                        }`}
+                                >
+                                    <span className={isActive ? "text-[#4f6ef7]" : "text-gray-400"}>{item.icon}</span>
+                                    {item.name}
+                                </motion.div>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="desktop-active-bg"
+                                        className="absolute inset-0 bg-[#eef1fe] rounded-lg"
+                                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                                    />
+                                )}
                             </Link>
                         );
                     })}
