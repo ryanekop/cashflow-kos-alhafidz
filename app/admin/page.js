@@ -243,7 +243,7 @@ export default function AdminPage() {
         const exportYear = now.getFullYear();
 
         // Sheet 1: Ringkasan
-        const totalIn = transactions.filter(t => t.type !== "pengeluaran").reduce((s, t) => s + t.amount, 0);
+        const totalIn = transactions.filter(t => t.type === "kas").reduce((s, t) => s + t.amount, 0);
         const totalOut = transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0);
         const saldo = totalIn - totalOut;
         const summaryData = [
@@ -785,7 +785,7 @@ export default function AdminPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         {[{
                             label: "Total Pemasukan",
-                            value: formatIDR(transactions.filter(t => t.type !== "pengeluaran").reduce((s, t) => s + t.amount, 0)),
+                            value: formatIDR(transactions.filter(t => t.type === "kas").reduce((s, t) => s + t.amount, 0)),
                             color: "text-green-600", bg: "bg-green-50"
                         }, {
                             label: "Total Pengeluaran",
@@ -794,7 +794,7 @@ export default function AdminPage() {
                         }, {
                             label: "Saldo Kas",
                             value: formatIDR(
-                                transactions.filter(t => t.type !== "pengeluaran").reduce((s, t) => s + t.amount, 0) -
+                                transactions.filter(t => t.type === "kas").reduce((s, t) => s + t.amount, 0) -
                                 transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0)
                             ),
                             color: "text-[#4f6ef7]", bg: "bg-[#eef1fe]"
