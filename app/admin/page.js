@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import * as XLSX from "xlsx";
 
 function formatIDR(n) {
     return new Intl.NumberFormat("id-ID", {
@@ -39,6 +41,11 @@ export default function AdminPage() {
     const [statusMonth, setStatusMonth] = useState(new Date().toISOString().slice(0, 7));
 
     const [memberForm, setMemberForm] = useState({ name: "", status: "full" });
+
+    // Tambah Transaksi form
+    const [txType, setTxType] = useState("pengeluaran");
+    const [expenseForm, setExpenseForm] = useState({ amount: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+    const [kasForm, setKasForm] = useState({ memberId: "", month: new Date().toISOString().slice(0, 7), status: "full" });
     const [wifiForm, setWifiForm] = useState({ month: new Date().toISOString().slice(0, 7), amount: "" });
 
     const fetchAll = useCallback(async () => {
@@ -180,6 +187,126 @@ export default function AdminPage() {
         fetchAll();
     };
 
+    // ===== TAMBAH TRANSAKSI HANDLERS =====
+    const handleAddExpense = async (e) => {
+        e.preventDefault();
+        if (!expenseForm.amount || !expenseForm.notes) return;
+        await fetch("/api/transactions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                memberId: 0,
+                memberName: "Pengeluaran",
+                type: "pengeluaran",
+                month: expenseForm.date.slice(0, 7),
+                amount: -Math.abs(parseInt(expenseForm.amount)),
+                status: "expense",
+                notes: expenseForm.notes,
+                date: new Date(expenseForm.date).toISOString(),
+            }),
+        });
+        showToast(`Pengeluaran ${formatIDR(parseInt(expenseForm.amount))} ditambahkan`);
+        setExpenseForm({ amount: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+        fetchAll();
+    };
+
+    const handleAddKasManual = async (e) => {
+        e.preventDefault();
+        if (!kasForm.memberId || !kasForm.month) return;
+        const member = members.find(m => m.id === parseInt(kasForm.memberId));
+        if (!member) return;
+        const amount = calculateKas(kasForm.month, kasForm.status);
+        await fetch("/api/transactions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                memberId: member.id,
+                memberName: member.name,
+                type: "kas",
+                month: kasForm.month,
+                amount,
+                status: kasForm.status,
+                notes: "Ditambahkan manual oleh admin",
+            }),
+        });
+        showToast(`Kas ${member.name} (${kasForm.month}) ${formatIDR(amount)} ditambahkan`);
+        setKasForm({ ...kasForm, memberId: "" });
+        fetchAll();
+    };
+
+    // ===== EXPORT EXCEL =====
+    const MONTHS_LABEL = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+    const handleExportExcel = () => {
+        const wb = XLSX.utils.book_new();
+        const now = new Date();
+        const exportYear = now.getFullYear();
+
+        // Sheet 1: Ringkasan
+        const totalIn = transactions.filter(t => t.type !== "pengeluaran").reduce((s, t) => s + t.amount, 0);
+        const totalOut = transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0);
+        const saldo = totalIn - totalOut;
+        const summaryData = [
+            ["Ringkasan Kas Kos Alhafidz"],
+            ["Tanggal Export", now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })],
+            [],
+            ["Keterangan", "Jumlah"],
+            ["Total Pemasukan", totalIn],
+            ["Total Pengeluaran", totalOut],
+            ["Saldo Kas", saldo],
+        ];
+        const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+        ws1["!cols"] = [{ wch: 25 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, ws1, "Ringkasan");
+
+        // Sheet 2: Rekap Kas
+        const monthKeys = MONTHS_LABEL.map((_, i) => `${exportYear}-${String(i + 1).padStart(2, "0")}`);
+        const rekapHeader = ["No", "Nama", ...MONTHS_LABEL, "Total"];
+        const rekapRows = members.map((m, idx) => {
+            let total = 0;
+            const row = [idx + 1, m.name];
+            monthKeys.forEach(mk => {
+                const tx = transactions.find(t => t.memberId === m.id && t.type === "kas" && t.month === mk);
+                const val = tx ? tx.amount : 0;
+                total += val;
+                row.push(val || "");
+            });
+            row.push(total);
+            return row;
+        });
+        const ws2 = XLSX.utils.aoa_to_sheet([rekapHeader, ...rekapRows]);
+        ws2["!cols"] = [{ wch: 4 }, { wch: 18 }, ...MONTHS_LABEL.map(() => ({ wch: 10 })), { wch: 12 }];
+        XLSX.utils.book_append_sheet(wb, ws2, "Rekap Kas");
+
+        // Sheet 3: Pengeluaran
+        const expenseHeader = ["No", "Tanggal", "Keterangan", "Jumlah"];
+        const expenses = transactions.filter(t => t.type === "pengeluaran").sort((a, b) => new Date(a.date) - new Date(b.date));
+        const expenseRows = expenses.map((t, i) => [
+            i + 1,
+            new Date(t.date).toLocaleDateString("id-ID"),
+            t.notes || "-",
+            Math.abs(t.amount),
+        ]);
+        expenseRows.push(["", "", "TOTAL", totalOut]);
+        const ws3 = XLSX.utils.aoa_to_sheet([expenseHeader, ...expenseRows]);
+        ws3["!cols"] = [{ wch: 4 }, { wch: 15 }, { wch: 40 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, ws3, "Pengeluaran");
+
+        // Sheet 4: Semua Transaksi
+        const allHeader = ["No", "Tipe", "Nama", "Bulan", "Nominal", "Status", "Tanggal", "Catatan"];
+        const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+        const allRows = sorted.map((t, i) => [
+            i + 1, t.type, t.memberName, t.month, t.amount,
+            t.status || "-", new Date(t.date).toLocaleDateString("id-ID"), t.notes || "-",
+        ]);
+        const ws4 = XLSX.utils.aoa_to_sheet([allHeader, ...allRows]);
+        ws4["!cols"] = [{ wch: 4 }, { wch: 12 }, { wch: 18 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 40 }];
+        XLSX.utils.book_append_sheet(wb, ws4, "Semua Transaksi");
+
+        XLSX.writeFile(wb, `Kas_Alhafidz_${exportYear}.xlsx`);
+        showToast("File Excel berhasil didownload!");
+    };
+
     // ===== Login Screen =====
     if (!authenticated) {
         return (
@@ -207,10 +334,12 @@ export default function AdminPage() {
 
     const tabs = [
         { id: "status", label: "Status Bayar" },
+        { id: "tambah", label: "Tambah Transaksi" },
         { id: "member", label: "Kelola Member" },
         { id: "wifi", label: "Tagihan WiFi" },
         { id: "wifi-usage", label: "Isi WiFi" },
         { id: "history", label: "Riwayat" },
+        { id: "export", label: "Export" },
     ];
 
     // Month navigation helpers
@@ -539,6 +668,166 @@ export default function AdminPage() {
                     </div>
                 );
             })()}
+
+            {/* ===== TAMBAH TRANSAKSI TAB ===== */}
+            {activeTab === "tambah" && (
+                <motion.div
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-5"
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+                >
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-700 mb-1">Tambah Transaksi</h2>
+                        <p className="text-xs text-gray-400">Tambah pengeluaran atau pemasukan kas manual</p>
+                    </div>
+
+                    {/* Type toggle */}
+                    <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                        <button onClick={() => setTxType("pengeluaran")} className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${txType === "pengeluaran" ? "bg-white text-red-500 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Pengeluaran</button>
+                        <button onClick={() => setTxType("kas")} className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${txType === "kas" ? "bg-white text-[#4f6ef7] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Pemasukan Kas</button>
+                    </div>
+
+                    {txType === "pengeluaran" ? (
+                        <motion.form key="expense" onSubmit={handleAddExpense} className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1.5">Nominal (Rp)</label>
+                                <input type="number" value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })} placeholder="50000" className={inputCls} required />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1.5">Tanggal</label>
+                                <input type="date" value={expenseForm.date} onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })} className={inputCls} required />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1.5">Keterangan</label>
+                                <input type="text" value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })} placeholder="Beli Listrik, Sapu, dll..." className={inputCls} required />
+                            </div>
+                            {expenseForm.amount && (
+                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-red-50/60 border border-red-100">
+                                    <span className="text-xs text-gray-500">Akan dicatat</span>
+                                    <span className="text-sm font-semibold text-red-500">-{formatIDR(Math.abs(parseInt(expenseForm.amount) || 0))}</span>
+                                </div>
+                            )}
+                            <button type="submit" className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors">Tambah Pengeluaran</button>
+                        </motion.form>
+                    ) : (
+                        <motion.form key="kas" onSubmit={handleAddKasManual} className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1.5">Member</label>
+                                <select value={kasForm.memberId} onChange={e => setKasForm({ ...kasForm, memberId: e.target.value })} className={inputCls} required>
+                                    <option value="">Pilih Member...</option>
+                                    {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
+                                    <input type="month" value={kasForm.month} onChange={e => setKasForm({ ...kasForm, month: e.target.value })} className={inputCls} required />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-gray-500 mb-1.5">Status</label>
+                                    <select value={kasForm.status} onChange={e => setKasForm({ ...kasForm, status: e.target.value })} className={inputCls}>
+                                        <option value="full">Full ({formatIDR(calculateKas(kasForm.month, "full"))})</option>
+                                        <option value="half">Half ({formatIDR(calculateKas(kasForm.month, "half"))})</option>
+                                        <option value="none">None ({formatIDR(calculateKas(kasForm.month, "none"))})</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {kasForm.memberId && kasForm.month && (
+                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50/60 border border-blue-100">
+                                    <span className="text-xs text-gray-500">Akan dicatat</span>
+                                    <span className="text-sm font-semibold text-[#4f6ef7]">+{formatIDR(calculateKas(kasForm.month, kasForm.status))}</span>
+                                </div>
+                            )}
+                            <button type="submit" className="w-full py-2.5 rounded-lg bg-[#4f6ef7] text-white text-sm font-medium hover:bg-[#4060e0] transition-colors">Tambah Kas</button>
+                        </motion.form>
+                    )}
+
+                    {/* Recent transactions */}
+                    {(() => {
+                        const recent = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+                        if (recent.length === 0) return null;
+                        return (
+                            <div className="pt-4 border-t border-gray-100">
+                                <h3 className="text-xs text-gray-400 mb-2">5 Transaksi Terakhir</h3>
+                                <div className="space-y-1.5">
+                                    {recent.map(t => (
+                                        <div key={t.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 text-xs">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold ${t.type === "pengeluaran" ? "bg-red-50 text-red-500" : t.type === "wifi" ? "bg-purple-50 text-purple-500" : "bg-blue-50 text-[#4f6ef7]"}`}>{t.type === "pengeluaran" ? "OUT" : t.type.toUpperCase()}</span>
+                                                <span className="text-gray-600 truncate">{t.memberName} · {t.notes || t.month}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                <span className={`font-medium ${t.type === "pengeluaran" ? "text-red-500" : "text-gray-700"}`}>{formatIDR(Math.abs(t.amount))}</span>
+                                                <button onClick={() => handleDeleteTx(t.id)} className="text-gray-300 hover:text-red-400 transition-colors">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })()}
+                </motion.div>
+            )}
+
+            {/* ===== EXPORT TAB ===== */}
+            {activeTab === "export" && (
+                <motion.div
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-5"
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
+                >
+                    <div>
+                        <h2 className="text-sm font-semibold text-gray-700 mb-1">Export Data ke Excel</h2>
+                        <p className="text-xs text-gray-400">Download semua data kas dalam format .xlsx</p>
+                    </div>
+
+                    {/* Preview summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {[{
+                            label: "Total Pemasukan",
+                            value: formatIDR(transactions.filter(t => t.type !== "pengeluaran").reduce((s, t) => s + t.amount, 0)),
+                            color: "text-green-600", bg: "bg-green-50"
+                        }, {
+                            label: "Total Pengeluaran",
+                            value: formatIDR(transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0)),
+                            color: "text-red-500", bg: "bg-red-50"
+                        }, {
+                            label: "Saldo Kas",
+                            value: formatIDR(
+                                transactions.filter(t => t.type !== "pengeluaran").reduce((s, t) => s + t.amount, 0) -
+                                transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0)
+                            ),
+                            color: "text-[#4f6ef7]", bg: "bg-[#eef1fe]"
+                        }].map((c, i) => (
+                            <div key={i} className={`p-3 rounded-lg ${c.bg}`}>
+                                <p className="text-[11px] text-gray-500 mb-1">{c.label}</p>
+                                <p className={`text-sm font-semibold ${c.color}`}>{c.value}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-gray-50 space-y-1.5 text-xs text-gray-500">
+                        <p className="font-medium text-gray-600">File Excel akan berisi:</p>
+                        <ul className="space-y-0.5 pl-3">
+                            <li>📊 Sheet "Ringkasan" — saldo, pemasukan, pengeluaran</li>
+                            <li>📋 Sheet "Rekap Kas" — tabel member × bulan</li>
+                            <li>💸 Sheet "Pengeluaran" — daftar semua pengeluaran</li>
+                            <li>📑 Sheet "Semua Transaksi" — seluruh data</li>
+                        </ul>
+                        <p className="text-gray-400">Total {transactions.length} transaksi</p>
+                    </div>
+
+                    <button
+                        onClick={handleExportExcel}
+                        className="w-full py-3 rounded-lg bg-[#34a853] text-white text-sm font-medium hover:bg-[#2d9249] transition-colors flex items-center justify-center gap-2"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download Excel
+                    </button>
+                </motion.div>
+            )}
         </div>
     );
 }
