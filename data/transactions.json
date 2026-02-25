@@ -1637,5 +1637,16 @@
     "status": "admin-set",
     "date": "2026-02-18T00:00:00.000Z",
     "notes": "Selisih kas"
+  },
+  {
+    "id": 1771922059135,
+    "memberId": 0,
+    "memberName": "Pengeluaran",
+    "type": "pengeluaran",
+    "month": "2026-02",
+    "amount": -98000,
+    "status": "expense",
+    "date": "2026-02-24T08:34:19.135Z",
+    "notes": "Beli Listrik"
   }
 ]
