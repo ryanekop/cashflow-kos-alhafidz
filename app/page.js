@@ -215,9 +215,29 @@ export default function DashboardPage() {
               .map(mo => ({ month: mo, amount: calcKas(mo, m.status) }));
           }
 
-          // WiFi debts from wifi-debts.json
+          // WiFi debts from wifi-debts.json (manually entered, historical)
           const myWifiDebts = wifiDebts.filter(d => d.memberId === m.id);
           const unpaidWifi = myWifiDebts.map(d => ({ month: d.month, amount: d.amount }));
+
+          // Also compute WiFi debts from wifi-bills + wifi-usage (auto-calculated)
+          // For months that have a bill and usage data but no wifi transaction yet
+          const paidWifiMonths = new Set([
+            ...transactions.filter(t => t.memberId === m.id && t.type === "wifi").map(t => t.month),
+            ...unpaidWifi.map(w => w.month), // don't duplicate with manual debts
+          ]);
+          wifiBills.forEach(bill => {
+            if (paidWifiMonths.has(bill.month)) return;
+            const monthUsage = wifiUsage.filter(u => u.month === bill.month);
+            const myUsage = monthUsage.find(u => u.memberId === m.id);
+            if (!myUsage) return; // member didn't use WiFi this month
+            const fullUsers = monthUsage.filter(u => u.level === "full").length;
+            const halfUsers = monthUsage.filter(u => u.level === "half").length;
+            if (fullUsers + halfUsers === 0) return;
+            const totalUnits = fullUsers + halfUsers * 0.75;
+            const unitCost = bill.amount / totalUnits;
+            const amount = myUsage.level === "half" ? Math.round(unitCost * 0.75) : Math.round(unitCost);
+            unpaidWifi.push({ month: bill.month, amount });
+          });
 
           if (unpaidKas.length > 0 || unpaidWifi.length > 0) {
             arrears.push({
