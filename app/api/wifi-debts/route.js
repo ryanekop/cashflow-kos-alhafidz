@@ -15,9 +15,20 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
-    const { id } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get('memberId');
+    const month = searchParams.get('month');
     let debts = readJSON('wifi-debts.json');
-    debts = debts.filter(d => d.id !== id);
+
+    if (memberId && month) {
+        // Delete by memberId + month (used by admin when checking WiFi payment)
+        debts = debts.filter(d => !(d.memberId === parseInt(memberId) && d.month === month));
+    } else {
+        // Delete by id (legacy)
+        const body = await request.json();
+        debts = debts.filter(d => d.id !== body.id);
+    }
+
     writeJSON('wifi-debts.json', debts);
     return NextResponse.json({ success: true });
 }

@@ -31,6 +31,7 @@ export default function AdminPage() {
     const [transactions, setTransactions] = useState([]);
     const [wifiBills, setWifiBills] = useState([]);
     const [wifiUsage, setWifiUsage] = useState([]);
+    const [wifiDebts, setWifiDebts] = useState([]);
     const [activeTab, setActiveTab] = useState("status");
     const [toast, setToast] = useState("");
 
@@ -49,13 +50,14 @@ export default function AdminPage() {
     const [wifiForm, setWifiForm] = useState({ month: new Date().toISOString().slice(0, 7), amount: "" });
 
     const fetchAll = useCallback(async () => {
-        const [m, t, w, wu] = await Promise.all([
+        const [m, t, w, wu, wd] = await Promise.all([
             fetch("/api/members").then(r => r.json()),
             fetch("/api/transactions").then(r => r.json()),
             fetch("/api/wifi-bills").then(r => r.json()),
             fetch("/api/wifi-usage").then(r => r.json()),
+            fetch("/api/wifi-debts").then(r => r.json()),
         ]);
-        setMembers(m); setTransactions(t); setWifiBills(w); setWifiUsage(wu);
+        setMembers(m); setTransactions(t); setWifiBills(w); setWifiUsage(wu); setWifiDebts(wd);
     }, []);
 
     useEffect(() => {
@@ -97,6 +99,14 @@ export default function AdminPage() {
         if (currentlyPaid) {
             const tx = transactions.find(t => t.memberId === memberId && t.type === type && t.month === month);
             if (tx) {
+                // If unchecking WiFi, re-add debt entry
+                if (type === "wifi") {
+                    await fetch("/api/wifi-debts", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ memberId, memberName, month, amount: tx.amount }),
+                    });
+                }
                 await fetch(`/api/transactions?id=${tx.id}`, { method: "DELETE" });
                 showToast(`${type.toUpperCase()} ${memberName} (${month}): BELUM BAYAR`);
             }
@@ -105,8 +115,16 @@ export default function AdminPage() {
             // Show inline picker for KAS
             setKasPicker(prev => ({ ...prev, [memberId]: true }));
         } else {
-            // WiFi: auto-calculate
-            const amount = calcWifiForMember(memberId, month);
+            // WiFi: use amount from wifi-debts if it exists, otherwise calculate
+            const debt = wifiDebts.find(d => d.memberId === memberId && d.month === month);
+            let amount;
+            if (debt) {
+                amount = debt.amount;
+                // Remove the debt entry since it's now paid
+                await fetch(`/api/wifi-debts?memberId=${memberId}&month=${month}`, { method: "DELETE" });
+            } else {
+                amount = calcWifiForMember(memberId, month);
+            }
             await fetch("/api/transactions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
