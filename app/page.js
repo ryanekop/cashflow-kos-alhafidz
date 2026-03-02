@@ -314,7 +314,7 @@ export default function DashboardPage() {
                           <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
                           <span className="text-[11px] font-semibold text-gray-600">Kas ({a.unpaidKas.length} bulan · {formatIDR(a.totalKas)})</span>
                         </div>
-                        <div className="sm:columns-2 gap-x-3 space-y-0.5 pl-3.5">
+                        <div className="space-y-0.5 pl-3.5">
                           {a.unpaidKas.map(e => (
                             <div key={e.month} className="flex justify-between text-[11px] break-inside-avoid">
                               <span className="text-gray-500">{formatMon(e.month)}</span>
@@ -330,7 +330,7 @@ export default function DashboardPage() {
                           <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
                           <span className="text-[11px] font-semibold text-gray-600">WiFi ({a.unpaidWifi.length} bulan · {formatIDR(a.totalWifi)})</span>
                         </div>
-                        <div className="sm:columns-2 gap-x-3 space-y-0.5 pl-3.5">
+                        <div className="space-y-0.5 pl-3.5">
                           {a.unpaidWifi.map(e => (
                             <div key={e.month} className="flex justify-between text-[11px] break-inside-avoid">
                               <span className="text-gray-500">{formatMon(e.month)}</span>
