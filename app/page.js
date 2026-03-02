@@ -282,7 +282,7 @@ export default function DashboardPage() {
             <h3 className="text-sm font-semibold text-gray-700 mb-1">Tunggakan Pembayaran</h3>
             <p className="text-xs text-gray-400 mb-4">Member yang belum bayar kas atau WiFi</p>
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3"
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
