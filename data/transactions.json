@@ -1648,5 +1648,71 @@
     "status": "expense",
     "date": "2026-02-24T08:34:19.135Z",
     "notes": "Beli Listrik"
+  },
+  {
+    "id": 1772445049289,
+    "memberId": 8,
+    "memberName": "Vicki",
+    "type": "kas",
+    "month": "2026-02",
+    "amount": 30000,
+    "status": "full",
+    "date": "2026-03-02T09:50:49.289Z",
+    "notes": "Diset oleh admin"
+  },
+  {
+    "id": 1772445056257,
+    "memberId": 9,
+    "memberName": "Ryan Eko",
+    "type": "kas",
+    "month": "2026-02",
+    "amount": 30000,
+    "status": "full",
+    "date": "2026-03-02T09:50:56.257Z",
+    "notes": "Diset oleh admin"
+  },
+  {
+    "id": 1772445060675,
+    "memberId": 9,
+    "memberName": "Ryan Eko",
+    "type": "wifi",
+    "month": "2026-01",
+    "amount": 53087,
+    "status": "admin-set",
+    "date": "2026-03-02T09:51:00.675Z",
+    "notes": "Diset oleh admin"
+  },
+  {
+    "id": 1772445606146,
+    "memberId": 0,
+    "memberName": "Pengeluaran",
+    "type": "pengeluaran",
+    "month": "2026-03",
+    "amount": -100000,
+    "status": "expense",
+    "date": "2026-03-02T10:00:06.146Z",
+    "notes": "Beli Listrik"
+  },
+  {
+    "id": 1772447058883,
+    "memberId": 8,
+    "memberName": "Vicki",
+    "type": "wifi",
+    "month": "2026-01",
+    "amount": 53087,
+    "status": "admin-set",
+    "date": "2026-03-02T10:24:18.883Z",
+    "notes": "Diset oleh admin"
+  },
+  {
+    "id": 1772447066058,
+    "memberId": 8,
+    "memberName": "Vicki",
+    "type": "wifi",
+    "month": "2025-12",
+    "amount": 36630,
+    "status": "admin-set",
+    "date": "2026-03-02T10:24:26.058Z",
+    "notes": "Diset oleh admin"
   }
 ]
