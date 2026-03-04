@@ -78,17 +78,17 @@ export default function DashboardPage() {
   const cards = [
     {
       title: "Saldo Kas", value: formatIDR(data?.kasBalance || 0),
-      bg: data?.kasBalance >= 0 ? "#eef1fe" : "#fef2f2", color: data?.kasBalance >= 0 ? "#4f6ef7" : "#ef4444",
+      bgClass: data?.kasBalance >= 0 ? "bg-[#eef1fe] dark:bg-[#4f6ef7]/15" : "bg-[#fef2f2] dark:bg-red-500/15", color: data?.kasBalance >= 0 ? "#4f6ef7" : "#ef4444",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4z" /></svg>,
     },
     {
       title: "Total Pemasukan", value: formatIDR(data?.totalPemasukan || 0),
-      bg: "#ecf7ef", color: "#34a853",
+      bgClass: "bg-[#ecf7ef] dark:bg-[#34a853]/15", color: "#34a853",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>,
     },
     {
       title: "Total Pengeluaran", value: formatIDR(data?.totalPengeluaran || 0),
-      bg: "#fef2f2", color: "#ef4444",
+      bgClass: "bg-[#fef2f2] dark:bg-red-500/15", color: "#ef4444",
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6" /><polyline points="17 18 23 18 23 12" /></svg>,
     },
   ];
@@ -140,7 +140,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{card.title}</span>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: card.bg, color: card.color }}>{card.icon}</div>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${card.bgClass}`} style={{ color: card.color }}>{card.icon}</div>
             </div>
             <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">{card.value}</p>
           </motion.div>
