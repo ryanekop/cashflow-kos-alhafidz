@@ -65,7 +65,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="w-8 h-8 border-2 border-gray-300 border-t-[#4f6ef7] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 dark:border-gray-600 border-t-[#4f6ef7] rounded-full animate-spin" />
       </div>
     );
   }
@@ -111,32 +111,10 @@ export default function DashboardPage() {
   const wifiRekap = getRekapData("wifi");
   const currentRekap = activeRekap === "kas" ? kasRekap : wifiRekap;
 
-  // ===== TIMELINE DATA (Kas + Pengeluaran only, no WiFi) =====
-  const kasTx = [...transactions].filter(tx => tx.type !== 'wifi').sort((a, b) => new Date(a.date) - new Date(b.date));
-  let runningBalance = 0;
-  const timeline = kasTx.map(tx => {
-    const isExpense = tx.type === 'pengeluaran';
-    const debit = isExpense ? 0 : tx.amount;
-    const kredit = isExpense ? Math.abs(tx.amount) : 0;
-    runningBalance += debit - kredit;
-    return { ...tx, debit, kredit, saldo: runningBalance };
-  });
-
-  // Group timeline by month
-  const timelineByMonth = {};
-  timeline.forEach(tx => {
-    const monthLabel = tx.month || "Unknown";
-    if (!timelineByMonth[monthLabel]) timelineByMonth[monthLabel] = [];
-    timelineByMonth[monthLabel].push(tx);
-  });
-
-  // ===== WIFI HISTORY DATA (separate) =====
-  const wifiTxList = [...transactions].filter(tx => tx.type === 'wifi').sort((a, b) => new Date(b.date) - new Date(a.date));
-
   return (
     <div className="space-y-6">
       <motion.h1
-        className="text-xl font-semibold text-gray-800"
+        className="text-xl font-semibold text-gray-800 dark:text-gray-100"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -154,17 +132,17 @@ export default function DashboardPage() {
         {cards.map((card, i) => (
           <motion.div
             key={i}
-            className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm"
+            className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 p-4 shadow-sm"
             variants={fadeUp}
             custom={i}
             whileHover={{ y: -4, boxShadow: "0 8px 25px rgba(0,0,0,0.08)" }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-500 font-medium">{card.title}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{card.title}</span>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: card.bg, color: card.color }}>{card.icon}</div>
             </div>
-            <p className="text-xl font-semibold text-gray-800">{card.value}</p>
+            <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">{card.value}</p>
           </motion.div>
         ))}
       </motion.div>
@@ -274,13 +252,13 @@ export default function DashboardPage() {
 
         return (
           <motion.div
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
+            className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-4 sm:p-5"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <h3 className="text-sm font-semibold text-gray-700 mb-1">Tunggakan Pembayaran</h3>
-            <p className="text-xs text-gray-400 mb-4">Member yang belum bayar kas atau WiFi</p>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Tunggakan Pembayaran</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Member yang belum bayar kas atau WiFi</p>
             <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3"
               variants={staggerContainer}
@@ -290,19 +268,19 @@ export default function DashboardPage() {
               {arrears.map((a, idx) => (
                 <motion.div
                   key={a.member.id}
-                  className="rounded-xl border border-red-100 overflow-hidden"
+                  className="rounded-xl border border-red-100 dark:border-red-900/30 overflow-hidden"
                   variants={fadeUp}
                   custom={idx}
                   whileHover={{ scale: 1.02, boxShadow: "0 4px 16px rgba(239,68,68,0.1)" }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
                   {/* Header */}
-                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-red-50/70">
+                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-red-50/70 dark:bg-red-900/15">
                     <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 ${a.member.status === "full" ? "bg-[#34a853]" : a.member.status === "half" ? "bg-[#e8a500]" : "bg-gray-400"}`}>
                         {a.member.name.substring(0, 2).toUpperCase()}
                       </div>
-                      <span className="text-sm font-semibold text-gray-800 truncate">{a.member.name}</span>
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{a.member.name}</span>
                     </div>
                     <span className="text-sm font-bold text-red-500 whitespace-nowrap ml-2">{formatIDR(a.totalKas + a.totalWifi)}</span>
                   </div>
@@ -312,12 +290,12 @@ export default function DashboardPage() {
                       <div>
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                          <span className="text-[11px] font-semibold text-gray-600">Kas ({a.unpaidKas.length} bulan · {formatIDR(a.totalKas)})</span>
+                          <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">Kas ({a.unpaidKas.length} bulan · {formatIDR(a.totalKas)})</span>
                         </div>
                         <div className="space-y-0.5 pl-3.5">
                           {a.unpaidKas.map(e => (
                             <div key={e.month} className="flex justify-between text-[11px] break-inside-avoid">
-                              <span className="text-gray-500">{formatMon(e.month)}</span>
+                              <span className="text-gray-500 dark:text-gray-400">{formatMon(e.month)}</span>
                               <span className="text-red-500 font-medium">{formatIDR(e.amount)}</span>
                             </div>
                           ))}
@@ -328,12 +306,12 @@ export default function DashboardPage() {
                       <div>
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
-                          <span className="text-[11px] font-semibold text-gray-600">WiFi ({a.unpaidWifi.length} bulan · {formatIDR(a.totalWifi)})</span>
+                          <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">WiFi ({a.unpaidWifi.length} bulan · {formatIDR(a.totalWifi)})</span>
                         </div>
                         <div className="space-y-0.5 pl-3.5">
                           {a.unpaidWifi.map(e => (
                             <div key={e.month} className="flex justify-between text-[11px] break-inside-avoid">
-                              <span className="text-gray-500">{formatMon(e.month)}</span>
+                              <span className="text-gray-500 dark:text-gray-400">{formatMon(e.month)}</span>
                               <span className="text-purple-500 font-medium">{formatIDR(e.amount)}</span>
                             </div>
                           ))}
@@ -350,19 +328,19 @@ export default function DashboardPage() {
 
       {/* Chart Kas */}
       <motion.div
-        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+        className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Pemasukan Kas</h3>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Pemasukan Kas</h3>
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--card-border, #f0f0f0)" />
               <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip contentStyle={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "10px", fontSize: "13px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }} formatter={(v) => formatIDR(v)} />
+              <Tooltip contentStyle={{ background: "var(--card-bg, #fff)", border: "1px solid var(--card-border, #e5e7eb)", borderRadius: "10px", fontSize: "13px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", color: "var(--foreground)" }} formatter={(v) => formatIDR(v)} />
               <Bar dataKey="kas" name="Kas" fill="#4f6ef7" radius={[5, 5, 0, 0]} />
               <Bar dataKey="pengeluaran" name="Pengeluaran" fill="#ef4444" radius={[5, 5, 0, 0]} />
             </BarChart>
@@ -372,21 +350,21 @@ export default function DashboardPage() {
 
       {/* ===== REKAP TABLE ===== */}
       <motion.div
-        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+        className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
       >
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Rekap Pembayaran {year}</h3>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Rekap Pembayaran {year}</h3>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-            <button onClick={() => setActiveRekap("kas")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "kas" ? "bg-white text-[#4f6ef7] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Kas</button>
-            <button onClick={() => setActiveRekap("wifi")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "wifi" ? "bg-white text-[#7c5cfc] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>WiFi</button>
+          <div className="flex gap-1 bg-gray-100 dark:bg-[#1e1e38] rounded-lg p-0.5">
+            <button onClick={() => setActiveRekap("kas")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "kas" ? "bg-white dark:bg-[#2a2a4a] text-[#4f6ef7] shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}>Kas</button>
+            <button onClick={() => setActiveRekap("wifi")} className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${activeRekap === "wifi" ? "bg-white dark:bg-[#2a2a4a] text-[#7c5cfc] shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700"}`}>WiFi</button>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setYear(y => y - 1)} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">←</button>
-            <span className="text-xs text-gray-500 font-medium w-10 text-center leading-7">{year}</span>
-            <button onClick={() => setYear(y => y + 1)} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">→</button>
+            <button onClick={() => setYear(y => y - 1)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#1e1e38] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2a2a4a] flex items-center justify-center text-xs transition-colors">←</button>
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium w-10 text-center leading-7">{year}</span>
+            <button onClick={() => setYear(y => y + 1)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#1e1e38] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2a2a4a] flex items-center justify-center text-xs transition-colors">→</button>
           </div>
         </div>
 
@@ -394,8 +372,8 @@ export default function DashboardPage() {
           <table className="w-full text-xs" style={{ minWidth: 700 }}>
             <thead>
               <tr>
-                <th className="text-left py-2 px-2 text-gray-400 font-medium sticky left-0 bg-white z-20 w-[36px]">No.</th>
-                <th className="text-left py-2 px-2 text-gray-400 font-medium sticky left-[36px] bg-white z-20 min-w-[100px]" style={{ boxShadow: '4px 0 8px -2px rgba(0,0,0,0.06)' }}>Nama</th>
+                <th className="text-left py-2 px-2 text-gray-400 font-medium sticky left-0 bg-white dark:bg-[#1a1a2e] z-20 w-[36px]">No.</th>
+                <th className="text-left py-2 px-2 text-gray-400 font-medium sticky left-[36px] bg-white dark:bg-[#1a1a2e] z-20 min-w-[100px]" style={{ boxShadow: '4px 0 8px -2px rgba(0,0,0,0.06)' }}>Nama</th>
                 {MONTHS.map((m, i) => (
                   <th key={i} className={`text-center py-2 px-1.5 font-medium min-w-[42px] ${new Date().getMonth() === i && new Date().getFullYear() === year ? "text-[#4f6ef7]" : "text-gray-400"
                     }`}>{m}</th>
@@ -406,18 +384,18 @@ export default function DashboardPage() {
               {currentRekap.map((row, idx) => (
                 <motion.tr
                   key={row.member.id}
-                  className="border-t border-gray-50"
+                  className="border-t border-gray-50 dark:border-gray-700/30"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: idx * 0.03 }}
                 >
-                  <td className="py-2 px-2 text-gray-400 sticky left-0 bg-white z-20">{idx + 1}</td>
-                  <td className="py-2 px-2 font-medium text-gray-700 sticky left-[36px] bg-white z-20" style={{ boxShadow: '4px 0 8px -2px rgba(0,0,0,0.06)' }}>{row.member.name}</td>
+                  <td className="py-2 px-2 text-gray-400 sticky left-0 bg-white dark:bg-[#1a1a2e] z-20">{idx + 1}</td>
+                  <td className="py-2 px-2 font-medium text-gray-700 dark:text-gray-200 sticky left-[36px] bg-white dark:bg-[#1a1a2e] z-20" style={{ boxShadow: '4px 0 8px -2px rgba(0,0,0,0.06)' }}>{row.member.name}</td>
                   {MONTHS.map((_, i) => {
                     const val = row[`m${i}`];
                     return (
-                      <td key={i} className={`text-center py-2 px-1.5 ${val !== null ? "font-medium text-gray-700" : ""}`}
-                        style={{ background: val !== null ? (activeRekap === "kas" ? "#eef1fe" : "#f3eefe") : undefined }}
+                      <td key={i} className={`text-center py-2 px-1.5 ${val !== null ? "font-medium text-gray-700 dark:text-gray-200" : ""}`}
+                        style={{ background: val !== null ? (activeRekap === "kas" ? "var(--rekap-kas-bg, #eef1fe)" : "var(--rekap-wifi-bg, #f3eefe)") : undefined }}
                       >
                         {val !== null ? formatIDRShort(val) : ""}
                       </td>
@@ -432,193 +410,6 @@ export default function DashboardPage() {
           </table>
         </div>
       </motion.div>
-
-      {/* ===== TIMELINE KAS + RIWAYAT WIFI (2-col on desktop) ===== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <motion.div
-          className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Timeline Kas {year}</h3>
-          {(() => {
-            const yearTxs = timeline.filter(tx => new Date(tx.date).getFullYear() === year);
-            if (yearTxs.length === 0) return <p className="py-8 text-center text-gray-400 text-sm">Belum ada transaksi di tahun {year}.</p>;
-
-            // Group by member + date + type
-            const groups = [];
-            yearTxs.forEach(tx => {
-              const dateStr = new Date(tx.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-              const existing = groups.find(g => g.memberId === tx.memberId && g.dateStr === dateStr && g.type === tx.type);
-              if (existing) {
-                existing.items.push(tx);
-                existing.totalDebit += tx.debit;
-                existing.totalKredit += tx.kredit;
-                existing.lastSaldo = tx.saldo;
-              } else {
-                groups.push({
-                  memberId: tx.memberId,
-                  memberName: tx.memberName || "—",
-                  type: tx.type,
-                  dateStr,
-                  date: tx.date,
-                  items: [tx],
-                  totalDebit: tx.debit,
-                  totalKredit: tx.kredit,
-                  lastSaldo: tx.saldo,
-                });
-              }
-            });
-
-            return (
-              <motion.div
-                className="space-y-2"
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                {groups.map((g, i) => {
-                  const isExpense = g.type === "pengeluaran";
-                  return (
-                    <motion.div
-                      key={i}
-                      className={`p-3 rounded-lg ${isExpense ? "bg-red-50/50" : "bg-gray-50"}`}
-                      variants={fadeUp}
-                      custom={i}
-                      whileHover={{ x: 4, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold ${isExpense ? "bg-red-100 text-red-500" : g.type === "wifi" ? "bg-purple-50 text-purple-500" : "bg-blue-50 text-[#4f6ef7]"
-                            }`}>{g.type === "pengeluaran" ? "OUT" : g.type.toUpperCase()}</span>
-                          <span className="text-sm font-medium text-gray-700 truncate">{g.memberName}</span>
-                        </div>
-                        <span className="text-[11px] text-gray-400 whitespace-nowrap ml-2">{g.dateStr}</span>
-                      </div>
-                      {g.items.length === 1 ? (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-400">{g.items[0].notes || g.items[0].month}</span>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-sm font-semibold ${isExpense ? "text-red-500" : "text-green-600"}`}>
-                              {isExpense ? `-${formatIDR(g.totalKredit)}` : `+${formatIDR(g.totalDebit)}`}
-                            </span>
-                            <span className="text-xs text-gray-400">Saldo: {formatIDR(g.lastSaldo)}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="space-y-0.5 mb-1.5">
-                            {g.items.map(tx => (
-                              <div key={tx.id} className="flex items-center justify-between text-xs">
-                                <span className="text-gray-400">{tx.month}</span>
-                                <span className={isExpense ? "text-red-500" : "text-green-600"}>{formatIDR(isExpense ? tx.kredit : tx.debit)}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex justify-between pt-1.5 border-t border-gray-200/60">
-                            <span className="text-[11px] font-medium text-gray-500">{g.items.length} bulan</span>
-                            <div className="flex items-center gap-3">
-                              <span className={`text-sm font-bold ${isExpense ? "text-red-500" : "text-green-600"}`}>
-                                {isExpense ? `-${formatIDR(g.totalKredit)}` : `+${formatIDR(g.totalDebit)}`}
-                              </span>
-                              <span className="text-xs text-gray-400">Saldo: {formatIDR(g.lastSaldo)}</span>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            );
-          })()}
-        </motion.div>
-
-
-        {/* ===== RIWAYAT WIFI (separate from Kas timeline) ===== */}
-        {wifiTxList.length > 0 && (
-          <motion.div
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0" />
-              <h3 className="text-sm font-semibold text-gray-700">Riwayat WiFi</h3>
-              <span className="text-[10px] text-gray-400 ml-auto">tidak dihitung ke saldo kas</span>
-            </div>
-            <motion.div
-              className="space-y-2"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-            >
-              {(() => {
-                // Group wifi tx by member + date
-                const wifiGroups = [];
-                wifiTxList.forEach(tx => {
-                  const dateStr = new Date(tx.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-                  const existing = wifiGroups.find(g => g.memberId === tx.memberId && g.dateStr === dateStr);
-                  if (existing) {
-                    existing.items.push(tx);
-                    existing.totalAmount += tx.amount;
-                  } else {
-                    wifiGroups.push({
-                      memberId: tx.memberId,
-                      memberName: tx.memberName || "—",
-                      dateStr,
-                      date: tx.date,
-                      items: [tx],
-                      totalAmount: tx.amount,
-                    });
-                  }
-                });
-
-                return wifiGroups.map((g, i) => (
-                  <motion.div
-                    key={i}
-                    className="p-3 rounded-lg bg-purple-50/50"
-                    variants={fadeUp}
-                    custom={i}
-                    whileHover={{ x: 4, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-500">WIFI</span>
-                        <span className="text-sm font-medium text-gray-700 truncate">{g.memberName}</span>
-                      </div>
-                      <span className="text-[11px] text-gray-400 whitespace-nowrap ml-2">{g.dateStr}</span>
-                    </div>
-                    {g.items.length === 1 ? (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400">{g.items[0].notes || g.items[0].month}</span>
-                        <span className="text-sm font-semibold text-purple-600">{formatIDR(g.totalAmount)}</span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-0.5 mb-1.5">
-                          {g.items.map(tx => (
-                            <div key={tx.id} className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400">{tx.month}</span>
-                              <span className="text-purple-600">{formatIDR(tx.amount)}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex justify-between pt-1.5 border-t border-purple-200/60">
-                          <span className="text-[11px] font-medium text-gray-500">{g.items.length} bulan</span>
-                          <span className="text-sm font-bold text-purple-600">{formatIDR(g.totalAmount)}</span>
-                        </div>
-                      </>
-                    )}
-                  </motion.div>
-                ));
-              })()}
-            </motion.div>
-          </motion.div>
-        )}
-      </div>
     </div>
   );
 }

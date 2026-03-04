@@ -26,7 +26,7 @@ export default function WifiPage() {
     const [popup, setPopup] = useState(null);
     const [successMsg, setSuccessMsg] = useState("");
 
-    const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
+    const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white dark:bg-[#1e1e38] border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
 
     useEffect(() => {
         Promise.all([
@@ -109,9 +109,9 @@ export default function WifiPage() {
                             exit={{ opacity: 0, scale: 0.85, y: 20 }}
                             transition={{ type: "spring", stiffness: 350, damping: 25 }}
                         >
-                            <h3 className="text-base font-semibold text-gray-800 mb-2">{popup.title}</h3>
-                            <p className="text-sm text-gray-600 mb-4">{popup.message}</p>
-                            <button onClick={() => setPopup(null)} className="w-full py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors">Tutup</button>
+                            <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100 mb-2">{popup.title}</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{popup.message}</p>
+                            <button onClick={() => setPopup(null)} className="w-full py-2 rounded-lg bg-gray-100 dark:bg-[#2a2a4a] text-gray-700 dark:text-gray-200 text-sm font-medium hover:bg-gray-200 dark:hover:bg-[#3a3a5a] transition-colors">Tutup</button>
                         </motion.div>
                     </motion.div>
                 )}
@@ -120,7 +120,7 @@ export default function WifiPage() {
             <AnimatePresence>
                 {successMsg && (
                     <motion.div
-                        className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm"
+                        className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 text-green-700 dark:text-green-400 text-sm"
                         initial={{ opacity: 0, y: -20, height: 0 }}
                         animate={{ opacity: 1, y: 0, height: "auto" }}
                         exit={{ opacity: 0, y: -20, height: 0 }}
@@ -137,17 +137,17 @@ export default function WifiPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
             >
-                <h1 className="text-xl font-semibold text-gray-800">Isi Pemakaian WiFi</h1>
-                <p className="text-sm text-gray-400 mt-1">Isi apakah kamu pakai WiFi bulan ini</p>
+                <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Isi Pemakaian WiFi</h1>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Isi apakah kamu pakai WiFi bulan ini</p>
             </motion.div>
 
             {/* Form */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 space-y-4"
                 variants={fadeUp} custom={0} initial="hidden" animate="visible"
             >
                 <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">Siapa kamu?</label>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Siapa kamu?</label>
                     <select value={selectedMember} onChange={e => setSelectedMember(e.target.value)} className={inputCls}>
                         <option value="">Pilih Namamu...</option>
                         {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -156,11 +156,11 @@ export default function WifiPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Bulan</label>
                         <input type="month" value={month} onChange={e => setMonth(e.target.value)} className={inputCls} />
                     </div>
                     <div>
-                        <label className="block text-xs text-gray-500 mb-1.5">Pakai WiFi bulan ini?</label>
+                        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Pakai WiFi bulan ini?</label>
                         <select value={level} onChange={e => setLevel(e.target.value)} className={inputCls}>
                             <option value="full">Full (sebulan penuh)</option>
                             <option value="half">Setengah bulan</option>
@@ -182,34 +182,34 @@ export default function WifiPage() {
             <AnimatePresence>
                 {bill && (fullUsers + halfUsers) > 0 && selectedMember && (
                     <motion.div
-                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                        className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
                     >
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3 flex items-center gap-2">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" />
                             </svg>
                             Perkiraan Tagihan WiFi
                         </h3>
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between text-gray-500">
+                            <div className="flex justify-between text-gray-500 dark:text-gray-400">
                                 <span>Total tagihan bulan ini</span>
-                                <span className="font-medium text-gray-700">{formatIDR(bill.amount)}</span>
+                                <span className="font-medium text-gray-700 dark:text-gray-200">{formatIDR(bill.amount)}</span>
                             </div>
-                            <div className="flex justify-between text-gray-500">
+                            <div className="flex justify-between text-gray-500 dark:text-gray-400">
                                 <span>Pengguna: {fullUsers} full, {halfUsers} setengah</span>
-                                <span className="text-xs text-gray-400">({fullUsers + halfUsers} orang)</span>
+                                <span className="text-xs text-gray-400 dark:text-gray-500">({fullUsers + halfUsers} orang)</span>
                             </div>
-                            <div className="border-t border-gray-100 pt-2 flex justify-between">
-                                <span className="text-gray-600 font-medium">Kamu bayar</span>
+                            <div className="border-t border-gray-100 dark:border-gray-700/50 pt-2 flex justify-between">
+                                <span className="text-gray-600 dark:text-gray-300 font-medium">Kamu bayar</span>
                                 <motion.span
-                                    className="text-lg font-semibold text-gray-800"
+                                    className="text-lg font-semibold text-gray-800 dark:text-gray-100"
                                     key={previewAmount}
                                     initial={{ scale: 1.1, color: "#7c5cfc" }}
-                                    animate={{ scale: 1, color: "#1e293b" }}
+                                    animate={{ scale: 1, color: "var(--foreground)" }}
                                     transition={{ duration: 0.3 }}
                                 >
                                     {formatIDR(previewAmount)}
@@ -223,13 +223,13 @@ export default function WifiPage() {
             <AnimatePresence>
                 {!bill && month && (
                     <motion.div
-                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                        className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.4 }}
                     >
-                        <p className="text-sm text-amber-600 text-center">Tagihan WiFi bulan {month} belum diinput admin</p>
+                        <p className="text-sm text-amber-600 dark:text-amber-400 text-center">Tagihan WiFi bulan {month} belum diinput admin</p>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -238,13 +238,13 @@ export default function WifiPage() {
             <AnimatePresence>
                 {monthUsage.length > 0 && (
                     <motion.div
-                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                        className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
                     >
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Yang sudah isi ({month})</h3>
+                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Yang sudah isi ({month})</h3>
                         <motion.div
                             className="space-y-1.5"
                             variants={staggerContainer}
@@ -254,18 +254,18 @@ export default function WifiPage() {
                             {monthUsage.map((u, idx) => (
                                 <motion.div
                                     key={u.id}
-                                    className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 text-sm"
+                                    className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 dark:bg-[#1e1e38] text-sm"
                                     variants={fadeUp}
                                     custom={idx}
-                                    whileHover={{ x: 4, backgroundColor: "#f0f0f5" }}
+                                    whileHover={{ x: 4, backgroundColor: "var(--card-border)" }}
                                 >
-                                    <span className="text-gray-700 font-medium">{u.memberName}</span>
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">{u.memberName}</span>
                                     <div className="flex items-center gap-2">
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${u.level === "full" ? "bg-blue-50 text-[#4f6ef7] border border-blue-200" : "bg-amber-50 text-amber-600 border border-amber-200"
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${u.level === "full" ? "bg-blue-50 dark:bg-blue-900/30 text-[#4f6ef7] border border-blue-200 dark:border-blue-700/50" : "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50"
                                             }`}>{u.level === "full" ? "FULL" : "SETENGAH"}</span>
                                         <motion.button
                                             onClick={() => handleDeleteUsage(u.id, u.memberName)}
-                                            className="text-gray-300 hover:text-red-400 transition-colors"
+                                            className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors"
                                             whileTap={{ scale: 0.85 }}
                                         >
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import ThemeProvider from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,14 +20,21 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark")document.documentElement.classList.add("dark")}catch(e){}})();`
+        }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex min-h-screen bg-[#f8f9fb] overflow-x-hidden">
-          <Sidebar />
-          <main className="flex-1 min-w-0 lg:ml-60 p-4 pb-20 lg:p-8 lg:pb-8">
-            {children}
-          </main>
-        </div>
+        <ThemeProvider>
+          <div className="flex min-h-screen bg-[#f8f9fb] dark:bg-[#0f0f23] overflow-x-hidden transition-colors duration-300">
+            <Sidebar />
+            <main className="flex-1 min-w-0 pt-14 p-4 pb-20 lg:pt-8 lg:p-8 lg:pb-8 sidebar-margin">
+              {children}
+            </main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

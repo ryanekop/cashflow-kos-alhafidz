@@ -20,7 +20,7 @@ function calculateKas(monthStr, status) {
 }
 
 const ADMIN_PASSWORD = "alhafidz321";
-const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
+const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white dark:bg-[#1e1e38] border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
 
 export default function AdminPage() {
     const [authenticated, setAuthenticated] = useState(false);
@@ -329,14 +329,14 @@ export default function AdminPage() {
     if (!authenticated) {
         return (
             <div className="flex items-center justify-center min-h-[70vh]">
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 w-full max-w-sm">
+                <div className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-6 w-full max-w-sm">
                     <div className="text-center mb-5">
                         <div className="w-12 h-12 rounded-xl bg-[#eef1fe] flex items-center justify-center mx-auto mb-3">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-800">Admin Panel</h2>
+                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Admin Panel</h2>
                         <p className="text-xs text-gray-400 mt-1">Masukkan password untuk melanjutkan</p>
                     </div>
                     <form onSubmit={handleLogin} className="space-y-3">
@@ -379,20 +379,20 @@ export default function AdminPage() {
     return (
         <div className="space-y-5">
             <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-gray-800">Admin Panel</h1>
+                <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Admin Panel</h1>
                 <button onClick={() => { sessionStorage.removeItem("admin_auth"); setAuthenticated(false); }}
                     className="text-xs text-gray-400 hover:text-red-500 transition-colors">Logout</button>
             </div>
 
             {toast && (
-                <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">✓ {toast}</div>
+                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 text-green-700 dark:text-green-400 text-sm">✓ {toast}</div>
             )}
 
             {/* Tabs */}
-            <div className="flex gap-1.5 bg-white rounded-xl border border-gray-100 p-1 shadow-sm overflow-x-auto no-scrollbar">
+            <div className="flex gap-1.5 bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 p-1 shadow-sm overflow-x-auto no-scrollbar">
                 {tabs.map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                        className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab.id ? "bg-[#4f6ef7] text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                        className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab.id ? "bg-[#4f6ef7] text-white" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#2a2a4a]"
                             }`}
                     >{tab.label}</button>
                 ))}
@@ -400,16 +400,16 @@ export default function AdminPage() {
 
             {/* ===== STATUS TAB with Month Selector ===== */}
             {activeTab === "status" && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <div className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                         <div>
-                            <h2 className="text-sm font-semibold text-gray-700">Status Pembayaran</h2>
-                            <p className="text-xs text-gray-400 mt-0.5">Klik untuk mengubah status</p>
+                            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Status Pembayaran</h2>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Klik untuk mengubah status</p>
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <button onClick={prevMonth} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">←</button>
-                            <span className="text-xs font-medium text-gray-600 w-32 text-center">{formatMonth(statusMonth)}</span>
-                            <button onClick={nextMonth} className="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center text-xs transition-colors">→</button>
+                            <button onClick={prevMonth} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#1e1e38] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2a2a4a] flex items-center justify-center text-xs transition-colors">←</button>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 w-32 text-center">{formatMonth(statusMonth)}</span>
+                            <button onClick={nextMonth} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-[#1e1e38] text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#2a2a4a] flex items-center justify-center text-xs transition-colors">→</button>
                         </div>
                     </div>
                     <div className="space-y-2">
@@ -420,7 +420,7 @@ export default function AdminPage() {
                             const hasPaidWifi = !!wifiTx;
                             const showPicker = kasPicker[m.id] && !hasPaidKas;
                             return (
-                                <div key={m.id} className="p-3 rounded-lg bg-gray-50">
+                                <div key={m.id} className="p-3 rounded-lg bg-gray-50 dark:bg-[#1e1e38]">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${m.status === "full" ? "bg-[#34a853]" : m.status === "half" ? "bg-[#e8a500]" : "bg-gray-400"
@@ -428,7 +428,7 @@ export default function AdminPage() {
                                                 {m.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-gray-700">{m.name}</p>
+                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{m.name}</p>
                                                 {(hasPaidKas || hasPaidWifi) && (
                                                     <p className="text-[10px] text-gray-400">
                                                         {hasPaidKas && kasTx.amount > 0 && `Kas: ${formatIDR(kasTx.amount)}`}
@@ -440,28 +440,28 @@ export default function AdminPage() {
                                         </div>
                                         <div className="flex gap-1.5">
                                             <button onClick={() => togglePaymentStatus(m.id, m.name, "kas", statusMonth, hasPaidKas)}
-                                                className={`px-3 py-1 rounded text-[11px] font-semibold transition-colors ${hasPaidKas ? "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100" : "bg-red-50 text-red-500 border border-red-200 hover:bg-red-100"
+                                                className={`px-3 py-1 rounded text-[11px] font-semibold transition-colors ${hasPaidKas ? "bg-green-50 dark:bg-green-900/30 text-green-600 border border-green-200 dark:border-green-800/40 hover:bg-green-100 dark:hover:bg-green-900/50" : "bg-red-50 dark:bg-red-900/30 text-red-500 border border-red-200 dark:border-red-800/40 hover:bg-red-100 dark:hover:bg-red-900/50"
                                                     }`}>KAS {hasPaidKas ? "✓" : "✗"}</button>
                                             <button onClick={() => togglePaymentStatus(m.id, m.name, "wifi", statusMonth, hasPaidWifi)}
-                                                className={`px-3 py-1 rounded text-[11px] font-semibold transition-colors ${hasPaidWifi ? "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100" : "bg-red-50 text-red-500 border border-red-200 hover:bg-red-100"
+                                                className={`px-3 py-1 rounded text-[11px] font-semibold transition-colors ${hasPaidWifi ? "bg-green-50 dark:bg-green-900/30 text-green-600 border border-green-200 dark:border-green-800/40 hover:bg-green-100 dark:hover:bg-green-900/50" : "bg-red-50 dark:bg-red-900/30 text-red-500 border border-red-200 dark:border-red-800/40 hover:bg-red-100 dark:hover:bg-red-900/50"
                                                     }`}>WIFI {hasPaidWifi ? "✓" : "✗"}</button>
                                         </div>
                                     </div>
                                     {/* Inline KAS status picker */}
                                     {showPicker && (
-                                        <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+                                        <div className="mt-2.5 pt-2.5 border-t border-gray-100 dark:border-gray-700/50">
                                             <p className="text-[11px] text-gray-400 mb-2">Pilih status untuk hitung nominal Kas:</p>
                                             <div className="flex gap-1.5">
                                                 <button onClick={() => confirmKasPayment(m.id, m.name, statusMonth, "full")}
-                                                    className="px-3 py-1.5 rounded-lg bg-blue-50 text-[#4f6ef7] text-[11px] font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
+                                                    className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/25 text-[#4f6ef7] text-[11px] font-medium border border-blue-200 dark:border-blue-800/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                                                     Full ({formatIDR(calculateKas(statusMonth, "full"))})
                                                 </button>
                                                 <button onClick={() => confirmKasPayment(m.id, m.name, statusMonth, "half")}
-                                                    className="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-600 text-[11px] font-medium border border-amber-200 hover:bg-amber-100 transition-colors">
+                                                    className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/25 text-amber-600 dark:text-amber-400 text-[11px] font-medium border border-amber-200 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors">
                                                     Half ({formatIDR(calculateKas(statusMonth, "half"))})
                                                 </button>
                                                 <button onClick={() => confirmKasPayment(m.id, m.name, statusMonth, "none")}
-                                                    className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 text-[11px] font-medium border border-gray-200 hover:bg-gray-200 transition-colors">
+                                                    className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-[#2a2a4a] text-gray-500 dark:text-gray-400 text-[11px] font-medium border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-[#3a3a5a] transition-colors">
                                                     None ({formatIDR(calculateKas(statusMonth, "none"))})
                                                 </button>
                                                 <button onClick={() => setKasPicker(prev => ({ ...prev, [m.id]: false }))}
@@ -478,16 +478,16 @@ export default function AdminPage() {
 
             {/* ===== MEMBER TAB ===== */}
             {activeTab === "member" && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <h2 className="text-sm font-semibold text-gray-700 mb-4">Kelola Member</h2>
-                    <form onSubmit={handleAddMember} className="space-y-3 mb-5 pb-5 border-b border-gray-100">
+                <div className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5">
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Kelola Member</h2>
+                    <form onSubmit={handleAddMember} className="space-y-3 mb-5 pb-5 border-b border-gray-100 dark:border-gray-700/50">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Nama</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Nama</label>
                                 <input type="text" value={memberForm.name} onChange={e => setMemberForm({ ...memberForm, name: e.target.value })} placeholder="Nama member" className={inputCls} />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Status</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
                                 <select value={memberForm.status} onChange={e => setMemberForm({ ...memberForm, status: e.target.value })} className={inputCls}>
                                     <option value="full">Di kos (Full)</option>
                                     <option value="half">Setengah bulan</option>
@@ -499,12 +499,12 @@ export default function AdminPage() {
                     </form>
                     <div className="space-y-1.5">
                         {members.map(m => (
-                            <div key={m.id} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50">
+                            <div key={m.id} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 dark:bg-[#1e1e38]">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${m.status === "full" ? "bg-[#34a853]" : m.status === "half" ? "bg-[#e8a500]" : "bg-gray-400"
                                         }`}>{m.name.substring(0, 2).toUpperCase()}</div>
                                     <div>
-                                        <p className="text-sm font-medium text-gray-700">{m.name}</p>
+                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{m.name}</p>
                                         <p className="text-[11px] text-gray-400">{m.status === "full" ? "Di kos" : m.status === "half" ? "Setengah bulan" : "Tidak di kos"}</p>
                                     </div>
                                 </div>
@@ -521,27 +521,27 @@ export default function AdminPage() {
 
             {/* ===== WIFI TAB ===== */}
             {activeTab === "wifi" && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <h2 className="text-sm font-semibold text-gray-700 mb-4">Input Tagihan WiFi Bulanan</h2>
+                <div className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5">
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Input Tagihan WiFi Bulanan</h2>
                     <form onSubmit={handleWifi} className="space-y-4">
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Bulan</label>
                             <input type="month" value={wifiForm.month} onChange={e => setWifiForm({ ...wifiForm, month: e.target.value })} className={inputCls} />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1.5">Total Tagihan (Rp)</label>
+                            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Total Tagihan (Rp)</label>
                             <input type="number" value={wifiForm.amount} onChange={e => setWifiForm({ ...wifiForm, amount: e.target.value })} placeholder="305250" className={inputCls} />
                         </div>
                         <button type="submit" className="w-full py-2.5 rounded-lg bg-[#4f6ef7] text-white text-sm font-medium hover:bg-[#4060e0] transition-colors">Simpan Tagihan</button>
                     </form>
                     <div className="mt-5">
-                        <h3 className="text-xs text-gray-400 mb-2.5">Tagihan Tersimpan</h3>
+                        <h3 className="text-xs text-gray-400 dark:text-gray-500 mb-2.5">Tagihan Tersimpan</h3>
                         <div className="space-y-1.5">
                             {wifiBills.map(b => (
-                                <div key={b.month} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 text-sm">
-                                    <span className="text-gray-500">{b.month}</span>
+                                <div key={b.month} className="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 dark:bg-[#1e1e38] text-sm">
+                                    <span className="text-gray-500 dark:text-gray-400">{b.month}</span>
                                     <div className="flex items-center gap-3">
-                                        <span className="font-medium text-gray-700">{formatIDR(b.amount)}</span>
+                                        <span className="font-medium text-gray-700 dark:text-gray-200">{formatIDR(b.amount)}</span>
                                         <button onClick={() => handleDeleteWifiBill(b.month)} className="text-gray-300 hover:text-red-400 transition-colors">
                                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -550,7 +550,7 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                             ))}
-                            {wifiBills.length === 0 && <p className="text-sm text-gray-400 text-center py-4">Belum ada tagihan.</p>}
+                            {wifiBills.length === 0 && <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Belum ada tagihan.</p>}
                         </div>
                     </div>
                 </div>
@@ -558,8 +558,8 @@ export default function AdminPage() {
 
             {/* ===== WIFI USAGE TAB ===== */}
             {activeTab === "wifi-usage" && (
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <h2 className="text-sm font-semibold text-gray-700 mb-1">Data Isi WiFi</h2>
+                <div className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5">
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Data Isi WiFi</h2>
                     <p className="text-xs text-gray-400 mb-4">List member yang mengisi WiFi per bulan</p>
                     <div className="space-y-3">
                         {(() => {
@@ -570,18 +570,18 @@ export default function AdminPage() {
                                 byMonth[u.month].push(u);
                             });
                             const months = Object.keys(byMonth).sort().reverse();
-                            if (months.length === 0) return <p className="text-sm text-gray-400 text-center py-4">Belum ada data WiFi usage.</p>;
+                            if (months.length === 0) return <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">Belum ada data WiFi usage.</p>;
                             return months.map(month => (
-                                <div key={month} className="rounded-lg bg-gray-50 p-3">
-                                    <h4 className="text-xs font-semibold text-gray-600 mb-2">{month}</h4>
+                                <div key={month} className="rounded-lg bg-gray-50 dark:bg-[#1e1e38] p-3">
+                                    <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">{month}</h4>
                                     <div className="space-y-1">
                                         {byMonth[month].map(u => {
                                             const member = members.find(m => m.id === u.memberId);
                                             return (
-                                                <div key={u.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-white">
+                                                <div key={u.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-white dark:bg-[#1a1a2e]">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-sm text-gray-700">{member?.name || u.memberId}</span>
-                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${u.level === "full" ? "bg-blue-50 text-[#4f6ef7]" : "bg-amber-50 text-amber-600"}`}>{u.level}</span>
+                                                        <span className="text-sm text-gray-700 dark:text-gray-200">{member?.name || u.memberId}</span>
+                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${u.level === "full" ? "bg-blue-50 dark:bg-blue-900/25 text-[#4f6ef7]" : "bg-amber-50 dark:bg-amber-900/25 text-amber-600 dark:text-amber-400"}`}>{u.level}</span>
                                                     </div>
                                                     <button onClick={() => handleDeleteWifiUsage(u.id)} className="text-gray-300 hover:text-red-400 transition-colors">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -624,29 +624,29 @@ export default function AdminPage() {
                 });
 
                 return (
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                        <h2 className="text-sm font-semibold text-gray-700 mb-4">Riwayat Transaksi</h2>
+                    <div className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5">
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">Riwayat Transaksi</h2>
                         <div className="space-y-2">
                             {groups.map((g, i) => (
-                                <div key={i} className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100/70 transition-colors">
+                                <div key={i} className="p-3 rounded-lg bg-gray-50 dark:bg-[#1e1e38] hover:bg-gray-100/70 dark:hover:bg-[#252545] transition-colors">
                                     <div className="flex items-center justify-between mb-1.5">
                                         <div className="flex items-center gap-2">
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${g.type === "kas" ? "bg-blue-50 text-[#4f6ef7]" : g.type === "pengeluaran" ? "bg-red-50 text-red-500" : "bg-purple-50 text-purple-500"
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${g.type === "kas" ? "bg-blue-50 dark:bg-blue-900/25 text-[#4f6ef7]" : g.type === "pengeluaran" ? "bg-red-50 dark:bg-red-900/25 text-red-500" : "bg-purple-50 dark:bg-purple-900/25 text-purple-500"
                                                 }`}>{g.type.toUpperCase()}</span>
-                                            <span className="text-sm font-medium text-gray-700">{g.memberName}</span>
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{g.memberName}</span>
                                         </div>
-                                        <span className="text-xs text-gray-400">{g.dateStr}</span>
+                                        <span className="text-xs text-gray-400 dark:text-gray-500">{g.dateStr}</span>
                                     </div>
                                     {g.items.length === 1 ? (
                                         <div className="flex items-center justify-between">
-                                            <div className="text-xs text-gray-400">
+                                            <div className="text-xs text-gray-400 dark:text-gray-500">
                                                 {g.items[0].month}
                                                 {g.items[0].notes && g.items[0].notes !== `Import dari Excel (${g.items[0].status})` && (
                                                     <span className="ml-1.5 text-gray-300">· {g.items[0].notes}</span>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-sm font-semibold ${g.type === "pengeluaran" ? "text-red-500" : "text-gray-700"}`}>{formatIDR(Math.abs(g.total))}</span>
+                                                <span className={`text-sm font-semibold ${g.type === "pengeluaran" ? "text-red-500" : "text-gray-700 dark:text-gray-200"}`}>{formatIDR(Math.abs(g.total))}</span>
                                                 <button onClick={() => handleDeleteTx(g.items[0].id)} className="text-gray-300 hover:text-red-400 transition-colors">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                         <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -661,7 +661,7 @@ export default function AdminPage() {
                                                     <div key={t.id} className="flex items-center justify-between text-xs">
                                                         <span className="text-gray-400">{t.month}</span>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-gray-600">{formatIDR(Math.abs(t.amount))}</span>
+                                                            <span className="text-gray-600 dark:text-gray-400">{formatIDR(Math.abs(t.amount))}</span>
                                                             <button onClick={() => handleDeleteTx(t.id)} className="text-gray-200 hover:text-red-400 transition-colors">
                                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                                     <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -671,9 +671,9 @@ export default function AdminPage() {
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="flex justify-between pt-1.5 border-t border-gray-200/60">
-                                                <span className="text-[11px] font-medium text-gray-500">{g.items.length} bulan</span>
-                                                <span className={`text-sm font-bold ${g.type === "pengeluaran" ? "text-red-500" : "text-gray-700"}`}>{formatIDR(Math.abs(g.total))}</span>
+                                            <div className="flex justify-between pt-1.5 border-t border-gray-200/60 dark:border-gray-700/40">
+                                                <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{g.items.length} bulan</span>
+                                                <span className={`text-sm font-bold ${g.type === "pengeluaran" ? "text-red-500" : "text-gray-700 dark:text-gray-200"}`}>{formatIDR(Math.abs(g.total))}</span>
                                             </div>
                                         </>
                                     )}
@@ -690,37 +690,37 @@ export default function AdminPage() {
             {/* ===== TAMBAH TRANSAKSI TAB ===== */}
             {activeTab === "tambah" && (
                 <motion.div
-                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-5"
+                    className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 space-y-5"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
                 >
                     <div>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-1">Tambah Transaksi</h2>
-                        <p className="text-xs text-gray-400">Tambah pengeluaran atau pemasukan kas manual</p>
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Tambah Transaksi</h2>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Tambah pengeluaran atau pemasukan kas manual</p>
                     </div>
 
                     {/* Type toggle */}
-                    <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-                        <button onClick={() => setTxType("pengeluaran")} className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${txType === "pengeluaran" ? "bg-white text-red-500 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Pengeluaran</button>
-                        <button onClick={() => setTxType("kas")} className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${txType === "kas" ? "bg-white text-[#4f6ef7] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Pemasukan Kas</button>
+                    <div className="flex gap-1 bg-gray-100 dark:bg-[#1e1e38] rounded-lg p-0.5">
+                        <button onClick={() => setTxType("pengeluaran")} className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${txType === "pengeluaran" ? "bg-white dark:bg-[#2a2a4a] text-red-500 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Pengeluaran</button>
+                        <button onClick={() => setTxType("kas")} className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${txType === "kas" ? "bg-white dark:bg-[#2a2a4a] text-[#4f6ef7] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Pemasukan Kas</button>
                     </div>
 
                     {txType === "pengeluaran" ? (
                         <motion.form key="expense" onSubmit={handleAddExpense} className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Nominal (Rp)</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Nominal (Rp)</label>
                                 <input type="number" value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })} placeholder="50000" className={inputCls} required />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Tanggal</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Tanggal</label>
                                 <input type="date" value={expenseForm.date} onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })} className={inputCls} required />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Keterangan</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Keterangan</label>
                                 <input type="text" value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })} placeholder="Beli Listrik, Sapu, dll..." className={inputCls} required />
                             </div>
                             {expenseForm.amount && (
-                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-red-50/60 border border-red-100">
-                                    <span className="text-xs text-gray-500">Akan dicatat</span>
+                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-red-50/60 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Akan dicatat</span>
                                     <span className="text-sm font-semibold text-red-500">-{formatIDR(Math.abs(parseInt(expenseForm.amount) || 0))}</span>
                                 </div>
                             )}
@@ -729,7 +729,7 @@ export default function AdminPage() {
                     ) : (
                         <motion.form key="kas" onSubmit={handleAddKasManual} className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Member</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Member</label>
                                 <select value={kasForm.memberId} onChange={e => setKasForm({ ...kasForm, memberId: e.target.value })} className={inputCls} required>
                                     <option value="">Pilih Member...</option>
                                     {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -737,11 +737,11 @@ export default function AdminPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Bulan</label>
                                     <input type="month" value={kasForm.month} onChange={e => setKasForm({ ...kasForm, month: e.target.value })} className={inputCls} required />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-gray-500 mb-1.5">Status</label>
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
                                     <select value={kasForm.status} onChange={e => setKasForm({ ...kasForm, status: e.target.value })} className={inputCls}>
                                         <option value="full">Full ({formatIDR(calculateKas(kasForm.month, "full"))})</option>
                                         <option value="half">Half ({formatIDR(calculateKas(kasForm.month, "half"))})</option>
@@ -750,8 +750,8 @@ export default function AdminPage() {
                                 </div>
                             </div>
                             {kasForm.memberId && kasForm.month && (
-                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50/60 border border-blue-100">
-                                    <span className="text-xs text-gray-500">Akan dicatat</span>
+                                <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50/60 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Akan dicatat</span>
                                     <span className="text-sm font-semibold text-[#4f6ef7]">+{formatIDR(calculateKas(kasForm.month, kasForm.status))}</span>
                                 </div>
                             )}
@@ -764,17 +764,17 @@ export default function AdminPage() {
                         const recent = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
                         if (recent.length === 0) return null;
                         return (
-                            <div className="pt-4 border-t border-gray-100">
-                                <h3 className="text-xs text-gray-400 mb-2">5 Transaksi Terakhir</h3>
+                            <div className="pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                                <h3 className="text-xs text-gray-400 dark:text-gray-500 mb-2">5 Transaksi Terakhir</h3>
                                 <div className="space-y-1.5">
                                     {recent.map(t => (
-                                        <div key={t.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 text-xs">
+                                        <div key={t.id} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-[#1e1e38] text-xs">
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold ${t.type === "pengeluaran" ? "bg-red-50 text-red-500" : t.type === "wifi" ? "bg-purple-50 text-purple-500" : "bg-blue-50 text-[#4f6ef7]"}`}>{t.type === "pengeluaran" ? "OUT" : t.type.toUpperCase()}</span>
-                                                <span className="text-gray-600 truncate">{t.memberName} · {t.notes || t.month}</span>
+                                                <span className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold ${t.type === "pengeluaran" ? "bg-red-50 dark:bg-red-900/25 text-red-500" : t.type === "wifi" ? "bg-purple-50 dark:bg-purple-900/25 text-purple-500" : "bg-blue-50 dark:bg-blue-900/25 text-[#4f6ef7]"}`}>{t.type === "pengeluaran" ? "OUT" : t.type.toUpperCase()}</span>
+                                                <span className="text-gray-600 dark:text-gray-400 truncate">{t.memberName} · {t.notes || t.month}</span>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                <span className={`font-medium ${t.type === "pengeluaran" ? "text-red-500" : "text-gray-700"}`}>{formatIDR(Math.abs(t.amount))}</span>
+                                                <span className={`font-medium ${t.type === "pengeluaran" ? "text-red-500" : "text-gray-700 dark:text-gray-200"}`}>{formatIDR(Math.abs(t.amount))}</span>
                                                 <button onClick={() => handleDeleteTx(t.id)} className="text-gray-300 hover:text-red-400 transition-colors">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                                                 </button>
@@ -791,12 +791,12 @@ export default function AdminPage() {
             {/* ===== EXPORT TAB ===== */}
             {activeTab === "export" && (
                 <motion.div
-                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-5"
+                    className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 space-y-5"
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
                 >
                     <div>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-1">Export Data ke Excel</h2>
-                        <p className="text-xs text-gray-400">Download semua data kas dalam format .xlsx</p>
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Export Data ke Excel</h2>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Download semua data kas dalam format .xlsx</p>
                     </div>
 
                     {/* Preview summary */}
@@ -804,28 +804,28 @@ export default function AdminPage() {
                         {[{
                             label: "Total Pemasukan",
                             value: formatIDR(transactions.filter(t => t.type === "kas").reduce((s, t) => s + t.amount, 0)),
-                            color: "text-green-600", bg: "bg-green-50"
+                            color: "text-green-600", bg: "bg-green-50 dark:bg-green-900/20"
                         }, {
                             label: "Total Pengeluaran",
                             value: formatIDR(transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0)),
-                            color: "text-red-500", bg: "bg-red-50"
+                            color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20"
                         }, {
                             label: "Saldo Kas",
                             value: formatIDR(
                                 transactions.filter(t => t.type === "kas").reduce((s, t) => s + t.amount, 0) -
                                 transactions.filter(t => t.type === "pengeluaran").reduce((s, t) => s + Math.abs(t.amount), 0)
                             ),
-                            color: "text-[#4f6ef7]", bg: "bg-[#eef1fe]"
+                            color: "text-[#4f6ef7]", bg: "bg-[#eef1fe] dark:bg-[#1e1e38]"
                         }].map((c, i) => (
                             <div key={i} className={`p-3 rounded-lg ${c.bg}`}>
-                                <p className="text-[11px] text-gray-500 mb-1">{c.label}</p>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">{c.label}</p>
                                 <p className={`text-sm font-semibold ${c.color}`}>{c.value}</p>
                             </div>
                         ))}
                     </div>
 
-                    <div className="p-3 rounded-lg bg-gray-50 space-y-1.5 text-xs text-gray-500">
-                        <p className="font-medium text-gray-600">File Excel akan berisi:</p>
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-[#1e1e38] space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        <p className="font-medium text-gray-600 dark:text-gray-300">File Excel akan berisi:</p>
                         <ul className="space-y-0.5 pl-3">
                             <li>📊 Sheet "Ringkasan" — saldo, pemasukan, pengeluaran</li>
                             <li>📋 Sheet "Rekap Kas" — tabel member × bulan</li>

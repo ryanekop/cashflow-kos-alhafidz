@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -10,6 +12,21 @@
 :root {
   --background: #f8f9fb;
   --foreground: #1e293b;
+  --card-bg: #ffffff;
+  --card-border: #f3f4f6;
+  --muted: #9ca3af;
+  --rekap-kas-bg: #eef1fe;
+  --rekap-wifi-bg: #f3eefe;
+}
+
+.dark {
+  --background: #0f0f23;
+  --foreground: #e2e8f0;
+  --card-bg: #1a1a2e;
+  --card-border: #2a2a4a;
+  --muted: #64748b;
+  --rekap-kas-bg: rgba(79, 110, 247, 0.12);
+  --rekap-wifi-bg: rgba(124, 92, 252, 0.12);
 }
 
 * {
@@ -27,6 +44,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Force pointer on ALL interactive elements */
@@ -67,6 +85,10 @@ textarea {
   border-radius: 10px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
 /* Modal overlay */
 .modal-overlay {
   position: fixed;
@@ -80,6 +102,10 @@ textarea {
   z-index: 100;
 }
 
+.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
 .modal-box {
   background: #fff;
   border-radius: 16px;
@@ -87,6 +113,11 @@ textarea {
   max-width: 400px;
   width: 90%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.dark .modal-box {
+  background: #1a1a2e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
 /* Hide scrollbar for horizontal scroll */
@@ -97,4 +128,12 @@ textarea {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Sidebar responsive margin — only on desktop */
+@media (min-width: 1024px) {
+  .sidebar-margin {
+    margin-left: var(--sidebar-width, 240px);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }

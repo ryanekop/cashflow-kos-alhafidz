@@ -18,7 +18,7 @@ function calculateKas(monthStr, status) {
     return status === "full" ? 25000 : 12500;
 }
 
-const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white border border-gray-200 text-gray-800 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
+const inputCls = "w-full px-3 py-2.5 rounded-lg bg-white dark:bg-[#1e1e38] border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 text-sm focus:border-[#4f6ef7] focus:ring-1 focus:ring-[#4f6ef7] outline-none transition-colors";
 
 const WA_NUMBER = "6283846451376";
 
@@ -233,10 +233,10 @@ export default function PaymentPage() {
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8a500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                                 </svg>
-                                <h3 className="text-base font-semibold text-gray-800">{popup.title}</h3>
+                                <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">{popup.title}</h3>
                             </div>
-                            <p className="text-sm text-gray-600 mb-4">{popup.message}</p>
-                            <button onClick={() => setPopup(null)} className="w-full py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200 transition-colors">Tutup</button>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{popup.message}</p>
+                            <button onClick={() => setPopup(null)} className="w-full py-2 rounded-lg bg-gray-100 dark:bg-[#2a2a4a] text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-[#3a3a5a] transition-colors">Tutup</button>
                         </motion.div>
                     </motion.div>
                 )}
@@ -248,16 +248,16 @@ export default function PaymentPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
             >
-                <h1 className="text-xl font-semibold text-gray-800">Kalkulator Pembayaran</h1>
-                <p className="text-sm text-gray-400 mt-1">Hitung tagihan lalu hubungi via WhatsApp</p>
+                <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Kalkulator Pembayaran</h1>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Hitung tagihan lalu hubungi via WhatsApp</p>
             </motion.div>
 
             {/* Select Member */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
                 variants={fadeUp} custom={0} initial="hidden" animate="visible"
             >
-                <label className="block text-xs text-gray-500 mb-1.5">Siapa kamu?</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Siapa kamu?</label>
                 <select value={selectedMember} onChange={e => setSelectedMember(e.target.value)} className={inputCls}>
                     <option value="">Pilih Namamu...</option>
                     {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -266,11 +266,11 @@ export default function PaymentPage() {
 
             {/* ===== KAS (multiple entries) ===== */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 space-y-4"
                 variants={fadeUp} custom={1} initial="hidden" animate="visible"
             >
                 <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
                         </svg>
@@ -311,11 +311,11 @@ export default function PaymentPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Bulan</label>
                                     <input type="month" value={entry.month} onChange={e => updateKasEntry(i, "month", e.target.value)} className={inputCls} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-gray-500 mb-1.5">Status</label>
+                                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
                                     <select value={entry.status} onChange={e => updateKasEntry(i, "status", e.target.value)} className={inputCls}>
                                         <option value="full">Di kos (Full)</option>
                                         <option value="half">Setengah bulan</option>
@@ -326,14 +326,14 @@ export default function PaymentPage() {
                             <AnimatePresence>
                                 {entry.month && (
                                     <motion.div
-                                        className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50/60 border border-blue-100"
+                                        className="flex items-center justify-between p-2.5 rounded-lg bg-blue-50/60 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30"
                                         initial={{ opacity: 0, y: -8 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -8 }}
                                         transition={{ duration: 0.25 }}
                                     >
-                                        <span className="text-xs text-gray-500">Subtotal</span>
-                                        <span className="text-sm font-semibold text-gray-800">{formatIDR(getKasAmount(entry))}</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">Subtotal</span>
+                                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{formatIDR(getKasAmount(entry))}</span>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -344,14 +344,14 @@ export default function PaymentPage() {
                 <AnimatePresence>
                     {totalKas > 0 && kasEntries.length > 1 && (
                         <motion.div
-                            className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200"
+                            className="flex items-center justify-between p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <span className="text-sm text-gray-600 font-medium">Total Kas</span>
-                            <span className="text-lg font-semibold text-gray-800">{formatIDR(totalKas)}</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total Kas</span>
+                            <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">{formatIDR(totalKas)}</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -359,11 +359,11 @@ export default function PaymentPage() {
 
             {/* ===== WIFI (multiple entries, auto-detect) ===== */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 space-y-4"
                 variants={fadeUp} custom={2} initial="hidden" animate="visible"
             >
                 <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c5cfc" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" />
                         </svg>
@@ -403,7 +403,7 @@ export default function PaymentPage() {
                                 )}
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1.5">Bulan</label>
+                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">Bulan</label>
                                 <input type="month" value={entry.month} onChange={e => updateWifiEntry(i, "month", e.target.value)} className={inputCls} />
                             </div>
                             {entry.month && selectedMember && (() => {
@@ -412,17 +412,17 @@ export default function PaymentPage() {
                                 if (usage) {
                                     return (
                                         <motion.div
-                                            className="flex items-center justify-between p-2.5 rounded-lg bg-purple-50/60 border border-purple-100"
+                                            className="flex items-center justify-between p-2.5 rounded-lg bg-purple-50/60 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/30"
                                             initial={{ opacity: 0, y: -8 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.25 }}
                                         >
                                             <div>
-                                                <span className="text-xs text-gray-500">Subtotal</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">Subtotal</span>
                                                 <p className="text-[10px] text-gray-400">{usage.level === "full" ? "Full" : "Setengah"}</p>
                                             </div>
                                             {amount > 0 ? (
-                                                <span className="text-sm font-semibold text-gray-800">{formatIDR(amount)}</span>
+                                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{formatIDR(amount)}</span>
                                             ) : (
                                                 <span className="text-[11px] text-amber-600">Tagihan belum diinput admin</span>
                                             )}
@@ -448,14 +448,14 @@ export default function PaymentPage() {
                 <AnimatePresence>
                     {totalWifi > 0 && wifiEntries.length > 1 && (
                         <motion.div
-                            className="flex items-center justify-between p-3 rounded-lg bg-purple-50 border border-purple-200"
+                            className="flex items-center justify-between p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/30"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <span className="text-sm text-gray-600 font-medium">Total WiFi</span>
-                            <span className="text-lg font-semibold text-gray-800">{formatIDR(totalWifi)}</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total WiFi</span>
+                            <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">{formatIDR(totalWifi)}</span>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -463,16 +463,16 @@ export default function PaymentPage() {
 
             {/* ===== TOTAL ===== */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
                 variants={fadeUp} custom={3} initial="hidden" animate="visible"
             >
                 <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-semibold text-gray-700">Total Pembayaran</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Total Pembayaran</span>
                     <motion.span
-                        className="text-2xl font-bold text-gray-800"
+                        className="text-2xl font-bold text-gray-800 dark:text-gray-100"
                         key={totalPayment}
                         initial={{ scale: 1.15, color: "#4f6ef7" }}
-                        animate={{ scale: 1, color: "#1e293b" }}
+                        animate={{ scale: 1, color: "var(--foreground, #1e293b)" }}
                         transition={{ duration: 0.4 }}
                     >
                         {formatIDR(totalPayment)}
@@ -481,7 +481,7 @@ export default function PaymentPage() {
                 <AnimatePresence>
                     {totalKas > 0 && (
                         <motion.div
-                            className="flex justify-between text-sm text-gray-500"
+                            className="flex justify-between text-sm text-gray-500 dark:text-gray-400"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
@@ -494,7 +494,7 @@ export default function PaymentPage() {
                 <AnimatePresence>
                     {totalWifi > 0 && (
                         <motion.div
-                            className="flex justify-between text-sm text-gray-500"
+                            className="flex justify-between text-sm text-gray-500 dark:text-gray-400"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
@@ -508,10 +508,10 @@ export default function PaymentPage() {
 
             {/* ===== PAYMENT METHOD ===== */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5 space-y-4"
                 variants={fadeUp} custom={4} initial="hidden" animate="visible"
             >
-                <h3 className="text-sm font-semibold text-gray-700">Metode Pembayaran</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Metode Pembayaran</h3>
                 <motion.div
                     className="grid grid-cols-2 sm:grid-cols-2 gap-2.5"
                     variants={staggerContainer}
@@ -523,8 +523,8 @@ export default function PaymentPage() {
                             key={m.id}
                             onClick={() => setPaymentMethod(paymentMethod === m.id ? "" : m.id)}
                             className={`p-3 rounded-lg border text-left transition-all ${paymentMethod === m.id
-                                ? "bg-white border-[#4f6ef7] ring-1 ring-[#4f6ef7] shadow-sm"
-                                : "bg-gray-50 border-gray-100 hover:border-gray-200"
+                                ? "bg-white dark:bg-[#1e1e38] border-[#4f6ef7] ring-1 ring-[#4f6ef7] shadow-sm"
+                                : "bg-gray-50 dark:bg-[#1e1e38] border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500"
                                 }`}
                             variants={fadeUp}
                             custom={idx}
@@ -535,7 +535,7 @@ export default function PaymentPage() {
                                 <div className="w-8 h-8 rounded-md flex items-center justify-center overflow-hidden shrink-0">
                                     <img src={m.logo} alt={m.label} className="w-full h-full object-contain" />
                                 </div>
-                                <span className="text-sm font-medium text-gray-700">{m.label}</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{m.label}</span>
                                 <AnimatePresence>
                                     {paymentMethod === m.id && (
                                         <motion.svg
@@ -569,7 +569,7 @@ export default function PaymentPage() {
                                 transition={{ height: { type: "spring", stiffness: 500, damping: 40, mass: 0.8 }, opacity: { duration: 0.2 } }}
                                 style={{ overflow: "hidden" }}
                             >
-                                <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 mb-0">
+                                <div className="rounded-lg border border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-900/15 p-4 mb-0">
                                     <motion.div
                                         initial={{ opacity: 0, y: 8 }}
                                         animate={{ opacity: 1, y: 0 }}
@@ -580,13 +580,13 @@ export default function PaymentPage() {
                                                 <img src={selected.logo} alt={selected.label} className="w-full h-full object-contain" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-700">{selected.id === "bni" ? "Transfer via BNI" : `Via ${selected.label}`}</p>
+                                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{selected.id === "bni" ? "Transfer via BNI" : `Via ${selected.label}`}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between bg-white rounded-lg px-3.5 py-2.5 border border-gray-100">
+                                        <div className="flex items-center justify-between bg-white dark:bg-[#1e1e38] rounded-lg px-3.5 py-2.5 border border-gray-100 dark:border-gray-600">
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-800">{selected.account}</p>
-                                                <p className="text-xs text-gray-500">A.n {selected.accountName}</p>
+                                                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{selected.account}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">A.n {selected.accountName}</p>
                                             </div>
                                             <motion.button
                                                 onClick={(e) => {
@@ -625,10 +625,10 @@ export default function PaymentPage() {
 
             {/* Tarif Info */}
             <motion.div
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                className="bg-white dark:bg-[#1a1a2e] rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-5"
                 variants={fadeUp} custom={5} initial="hidden" animate="visible"
             >
-                <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2 mb-3">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2 mb-3">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
                     </svg>
@@ -640,20 +640,20 @@ export default function PaymentPage() {
                     initial="hidden"
                     animate="visible"
                 >
-                    <motion.div className="p-3 rounded-lg bg-gray-50" variants={fadeUp} custom={0}>
-                        <p className="text-xs text-gray-400 mb-2 font-medium">Sebelum Juli 2025</p>
-                        <ul className="space-y-1 text-gray-600 text-xs">
-                            <li>Di kos (Full): <span className="font-medium text-gray-700">Rp25.000</span></li>
-                            <li>Setengah bulan: <span className="font-medium text-gray-700">Rp12.500</span></li>
-                            <li>Tidak di kos: <span className="font-medium text-gray-700">Rp10.000</span></li>
+                    <motion.div className="p-3 rounded-lg bg-gray-50 dark:bg-[#1e1e38]" variants={fadeUp} custom={0}>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 font-medium">Sebelum Juli 2025</p>
+                        <ul className="space-y-1 text-gray-600 dark:text-gray-400 text-xs">
+                            <li>Di kos (Full): <span className="font-medium text-gray-700 dark:text-gray-200">Rp25.000</span></li>
+                            <li>Setengah bulan: <span className="font-medium text-gray-700 dark:text-gray-200">Rp12.500</span></li>
+                            <li>Tidak di kos: <span className="font-medium text-gray-700 dark:text-gray-200">Rp10.000</span></li>
                         </ul>
                     </motion.div>
-                    <motion.div className="p-3 rounded-lg bg-gray-50" variants={fadeUp} custom={1}>
-                        <p className="text-xs text-gray-400 mb-2 font-medium">Mulai Juli 2025</p>
-                        <ul className="space-y-1 text-gray-600 text-xs">
-                            <li>Di kos (Full): <span className="font-medium text-gray-700">Rp30.000</span></li>
-                            <li>Setengah bulan: <span className="font-medium text-gray-700">Rp15.000</span></li>
-                            <li>Tidak di kos: <span className="font-medium text-gray-700">Rp10.000</span></li>
+                    <motion.div className="p-3 rounded-lg bg-gray-50 dark:bg-[#1e1e38]" variants={fadeUp} custom={1}>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 font-medium">Mulai Juli 2025</p>
+                        <ul className="space-y-1 text-gray-600 dark:text-gray-400 text-xs">
+                            <li>Di kos (Full): <span className="font-medium text-gray-700 dark:text-gray-200">Rp30.000</span></li>
+                            <li>Setengah bulan: <span className="font-medium text-gray-700 dark:text-gray-200">Rp15.000</span></li>
+                            <li>Tidak di kos: <span className="font-medium text-gray-700 dark:text-gray-200">Rp10.000</span></li>
                         </ul>
                     </motion.div>
                 </motion.div>
