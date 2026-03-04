@@ -160,10 +160,10 @@ export default function PaymentPage() {
     };
 
     const paymentMethods = [
-        { id: "bni", label: "BNI", color: "#f26522", desc: "Transfer via BNI" },
-        { id: "shopeepay", label: "ShopeePay", color: "#ee4d2d", desc: "Via ShopeePay", short: "S" },
-        { id: "gopay", label: "GoPay", color: "#00aed6", desc: "Via GoPay", short: "GP" },
-        { id: "dana", label: "DANA", color: "#118eea", desc: "Via DANA", short: "D" },
+        { id: "bni", label: "BNI", color: "#f26522", desc: "Transfer via BNI", logo: "/bni-logo.png", account: "0718804098", accountName: "RYAN EKO PRAMONO" },
+        { id: "shopeepay", label: "ShopeePay", color: "#ee4d2d", desc: "Via ShopeePay", logo: "/shopeepay-logo.png", account: "083846451376", accountName: "RYAN EKO PRAMONO" },
+        { id: "gopay", label: "GoPay", color: "#00aed6", desc: "Via GoPay", logo: "/gopay-logo.png", account: "083846451376", accountName: "RYAN EKO PRAMONO" },
+        { id: "dana", label: "DANA", color: "#118eea", desc: "Via DANA", logo: "/dana-logo.png", account: "083846451376", accountName: "RYAN EKO PRAMONO" },
     ];
 
     const handleWhatsApp = () => {
@@ -521,7 +521,7 @@ export default function PaymentPage() {
                     {paymentMethods.map((m, idx) => (
                         <motion.button
                             key={m.id}
-                            onClick={() => setPaymentMethod(m.id)}
+                            onClick={() => setPaymentMethod(paymentMethod === m.id ? "" : m.id)}
                             className={`p-3 rounded-lg border text-left transition-all ${paymentMethod === m.id
                                 ? "bg-white border-[#4f6ef7] ring-1 ring-[#4f6ef7] shadow-sm"
                                 : "bg-gray-50 border-gray-100 hover:border-gray-200"
@@ -532,8 +532,8 @@ export default function PaymentPage() {
                             whileHover={{ y: -2 }}
                         >
                             <div className="flex items-center gap-2 mb-1">
-                                <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: m.color }}>
-                                    <span className="text-white text-[8px] font-bold">{m.short || m.label}</span>
+                                <div className="w-8 h-8 rounded-md flex items-center justify-center overflow-hidden shrink-0">
+                                    <img src={m.logo} alt={m.label} className="w-full h-full object-contain" />
                                 </div>
                                 <span className="text-sm font-medium text-gray-700">{m.label}</span>
                                 <AnimatePresence>
@@ -551,6 +551,20 @@ export default function PaymentPage() {
                                 </AnimatePresence>
                             </div>
                             <p className="text-[11px] text-gray-400">{m.desc}</p>
+                            <AnimatePresence>
+                                {paymentMethod === m.id && (
+                                    <motion.div
+                                        className="mt-2 pt-2 border-t border-gray-100"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <p className="text-xs font-mono font-semibold text-gray-700">{m.account}</p>
+                                        <p className="text-[10px] text-gray-400">A.n {m.accountName}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </motion.button>
                     ))}
                 </motion.div>

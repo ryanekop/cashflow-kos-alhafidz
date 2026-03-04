@@ -433,64 +433,160 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ===== TIMELINE KAS ===== */}
-      <motion.div
-        className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-      >
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Timeline Kas {year}</h3>
-        {(() => {
-          const yearTxs = timeline.filter(tx => new Date(tx.date).getFullYear() === year);
-          if (yearTxs.length === 0) return <p className="py-8 text-center text-gray-400 text-sm">Belum ada transaksi di tahun {year}.</p>;
+      {/* ===== TIMELINE KAS + RIWAYAT WIFI (2-col on desktop) ===== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Timeline Kas {year}</h3>
+          {(() => {
+            const yearTxs = timeline.filter(tx => new Date(tx.date).getFullYear() === year);
+            if (yearTxs.length === 0) return <p className="py-8 text-center text-gray-400 text-sm">Belum ada transaksi di tahun {year}.</p>;
 
-          // Group by member + date + type
-          const groups = [];
-          yearTxs.forEach(tx => {
-            const dateStr = new Date(tx.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-            const existing = groups.find(g => g.memberId === tx.memberId && g.dateStr === dateStr && g.type === tx.type);
-            if (existing) {
-              existing.items.push(tx);
-              existing.totalDebit += tx.debit;
-              existing.totalKredit += tx.kredit;
-              existing.lastSaldo = tx.saldo;
-            } else {
-              groups.push({
-                memberId: tx.memberId,
-                memberName: tx.memberName || "—",
-                type: tx.type,
-                dateStr,
-                date: tx.date,
-                items: [tx],
-                totalDebit: tx.debit,
-                totalKredit: tx.kredit,
-                lastSaldo: tx.saldo,
-              });
-            }
-          });
+            // Group by member + date + type
+            const groups = [];
+            yearTxs.forEach(tx => {
+              const dateStr = new Date(tx.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+              const existing = groups.find(g => g.memberId === tx.memberId && g.dateStr === dateStr && g.type === tx.type);
+              if (existing) {
+                existing.items.push(tx);
+                existing.totalDebit += tx.debit;
+                existing.totalKredit += tx.kredit;
+                existing.lastSaldo = tx.saldo;
+              } else {
+                groups.push({
+                  memberId: tx.memberId,
+                  memberName: tx.memberName || "—",
+                  type: tx.type,
+                  dateStr,
+                  date: tx.date,
+                  items: [tx],
+                  totalDebit: tx.debit,
+                  totalKredit: tx.kredit,
+                  lastSaldo: tx.saldo,
+                });
+              }
+            });
 
-          return (
+            return (
+              <motion.div
+                className="space-y-2"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                {groups.map((g, i) => {
+                  const isExpense = g.type === "pengeluaran";
+                  return (
+                    <motion.div
+                      key={i}
+                      className={`p-3 rounded-lg ${isExpense ? "bg-red-50/50" : "bg-gray-50"}`}
+                      variants={fadeUp}
+                      custom={i}
+                      whileHover={{ x: 4, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold ${isExpense ? "bg-red-100 text-red-500" : g.type === "wifi" ? "bg-purple-50 text-purple-500" : "bg-blue-50 text-[#4f6ef7]"
+                            }`}>{g.type === "pengeluaran" ? "OUT" : g.type.toUpperCase()}</span>
+                          <span className="text-sm font-medium text-gray-700 truncate">{g.memberName}</span>
+                        </div>
+                        <span className="text-[11px] text-gray-400 whitespace-nowrap ml-2">{g.dateStr}</span>
+                      </div>
+                      {g.items.length === 1 ? (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-400">{g.items[0].notes || g.items[0].month}</span>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-sm font-semibold ${isExpense ? "text-red-500" : "text-green-600"}`}>
+                              {isExpense ? `-${formatIDR(g.totalKredit)}` : `+${formatIDR(g.totalDebit)}`}
+                            </span>
+                            <span className="text-xs text-gray-400">Saldo: {formatIDR(g.lastSaldo)}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-0.5 mb-1.5">
+                            {g.items.map(tx => (
+                              <div key={tx.id} className="flex items-center justify-between text-xs">
+                                <span className="text-gray-400">{tx.month}</span>
+                                <span className={isExpense ? "text-red-500" : "text-green-600"}>{formatIDR(isExpense ? tx.kredit : tx.debit)}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex justify-between pt-1.5 border-t border-gray-200/60">
+                            <span className="text-[11px] font-medium text-gray-500">{g.items.length} bulan</span>
+                            <div className="flex items-center gap-3">
+                              <span className={`text-sm font-bold ${isExpense ? "text-red-500" : "text-green-600"}`}>
+                                {isExpense ? `-${formatIDR(g.totalKredit)}` : `+${formatIDR(g.totalDebit)}`}
+                              </span>
+                              <span className="text-xs text-gray-400">Saldo: {formatIDR(g.lastSaldo)}</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            );
+          })()}
+        </motion.div>
+
+
+        {/* ===== RIWAYAT WIFI (separate from Kas timeline) ===== */}
+        {wifiTxList.length > 0 && (
+          <motion.div
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0" />
+              <h3 className="text-sm font-semibold text-gray-700">Riwayat WiFi</h3>
+              <span className="text-[10px] text-gray-400 ml-auto">tidak dihitung ke saldo kas</span>
+            </div>
             <motion.div
               className="space-y-2"
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
             >
-              {groups.map((g, i) => {
-                const isExpense = g.type === "pengeluaran";
-                return (
+              {(() => {
+                // Group wifi tx by member + date
+                const wifiGroups = [];
+                wifiTxList.forEach(tx => {
+                  const dateStr = new Date(tx.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+                  const existing = wifiGroups.find(g => g.memberId === tx.memberId && g.dateStr === dateStr);
+                  if (existing) {
+                    existing.items.push(tx);
+                    existing.totalAmount += tx.amount;
+                  } else {
+                    wifiGroups.push({
+                      memberId: tx.memberId,
+                      memberName: tx.memberName || "—",
+                      dateStr,
+                      date: tx.date,
+                      items: [tx],
+                      totalAmount: tx.amount,
+                    });
+                  }
+                });
+
+                return wifiGroups.map((g, i) => (
                   <motion.div
                     key={i}
-                    className={`p-3 rounded-lg ${isExpense ? "bg-red-50/50" : "bg-gray-50"}`}
+                    className="p-3 rounded-lg bg-purple-50/50"
                     variants={fadeUp}
                     custom={i}
                     whileHover={{ x: 4, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold ${isExpense ? "bg-red-100 text-red-500" : g.type === "wifi" ? "bg-purple-50 text-purple-500" : "bg-blue-50 text-[#4f6ef7]"
-                          }`}>{g.type === "pengeluaran" ? "OUT" : g.type.toUpperCase()}</span>
+                        <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-500">WIFI</span>
                         <span className="text-sm font-medium text-gray-700 truncate">{g.memberName}</span>
                       </div>
                       <span className="text-[11px] text-gray-400 whitespace-nowrap ml-2">{g.dateStr}</span>
@@ -498,12 +594,7 @@ export default function DashboardPage() {
                     {g.items.length === 1 ? (
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-400">{g.items[0].notes || g.items[0].month}</span>
-                        <div className="flex items-center gap-3">
-                          <span className={`text-sm font-semibold ${isExpense ? "text-red-500" : "text-green-600"}`}>
-                            {isExpense ? `-${formatIDR(g.totalKredit)}` : `+${formatIDR(g.totalDebit)}`}
-                          </span>
-                          <span className="text-xs text-gray-400">Saldo: {formatIDR(g.lastSaldo)}</span>
-                        </div>
+                        <span className="text-sm font-semibold text-purple-600">{formatIDR(g.totalAmount)}</span>
                       </div>
                     ) : (
                       <>
@@ -511,111 +602,23 @@ export default function DashboardPage() {
                           {g.items.map(tx => (
                             <div key={tx.id} className="flex items-center justify-between text-xs">
                               <span className="text-gray-400">{tx.month}</span>
-                              <span className={isExpense ? "text-red-500" : "text-green-600"}>{formatIDR(isExpense ? tx.kredit : tx.debit)}</span>
+                              <span className="text-purple-600">{formatIDR(tx.amount)}</span>
                             </div>
                           ))}
                         </div>
-                        <div className="flex justify-between pt-1.5 border-t border-gray-200/60">
+                        <div className="flex justify-between pt-1.5 border-t border-purple-200/60">
                           <span className="text-[11px] font-medium text-gray-500">{g.items.length} bulan</span>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-sm font-bold ${isExpense ? "text-red-500" : "text-green-600"}`}>
-                              {isExpense ? `-${formatIDR(g.totalKredit)}` : `+${formatIDR(g.totalDebit)}`}
-                            </span>
-                            <span className="text-xs text-gray-400">Saldo: {formatIDR(g.lastSaldo)}</span>
-                          </div>
+                          <span className="text-sm font-bold text-purple-600">{formatIDR(g.totalAmount)}</span>
                         </div>
                       </>
                     )}
                   </motion.div>
-                );
-              })}
+                ));
+              })()}
             </motion.div>
-          );
-        })()}
-      </motion.div>
-
-      {/* ===== RIWAYAT WIFI (separate from Kas timeline) ===== */}
-      {wifiTxList.length > 0 && (
-        <motion.div
-          className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shrink-0" />
-            <h3 className="text-sm font-semibold text-gray-700">Riwayat WiFi</h3>
-            <span className="text-[10px] text-gray-400 ml-auto">tidak dihitung ke saldo kas</span>
-          </div>
-          <motion.div
-            className="space-y-2"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            {(() => {
-              // Group wifi tx by member + date
-              const wifiGroups = [];
-              wifiTxList.forEach(tx => {
-                const dateStr = new Date(tx.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-                const existing = wifiGroups.find(g => g.memberId === tx.memberId && g.dateStr === dateStr);
-                if (existing) {
-                  existing.items.push(tx);
-                  existing.totalAmount += tx.amount;
-                } else {
-                  wifiGroups.push({
-                    memberId: tx.memberId,
-                    memberName: tx.memberName || "—",
-                    dateStr,
-                    date: tx.date,
-                    items: [tx],
-                    totalAmount: tx.amount,
-                  });
-                }
-              });
-
-              return wifiGroups.map((g, i) => (
-                <motion.div
-                  key={i}
-                  className="p-3 rounded-lg bg-purple-50/50"
-                  variants={fadeUp}
-                  custom={i}
-                  whileHover={{ x: 4, boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-500">WIFI</span>
-                      <span className="text-sm font-medium text-gray-700 truncate">{g.memberName}</span>
-                    </div>
-                    <span className="text-[11px] text-gray-400 whitespace-nowrap ml-2">{g.dateStr}</span>
-                  </div>
-                  {g.items.length === 1 ? (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{g.items[0].notes || g.items[0].month}</span>
-                      <span className="text-sm font-semibold text-purple-600">{formatIDR(g.totalAmount)}</span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-0.5 mb-1.5">
-                        {g.items.map(tx => (
-                          <div key={tx.id} className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400">{tx.month}</span>
-                            <span className="text-purple-600">{formatIDR(tx.amount)}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex justify-between pt-1.5 border-t border-purple-200/60">
-                        <span className="text-[11px] font-medium text-gray-500">{g.items.length} bulan</span>
-                        <span className="text-sm font-bold text-purple-600">{formatIDR(g.totalAmount)}</span>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              ));
-            })()}
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
