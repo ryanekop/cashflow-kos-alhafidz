@@ -556,46 +556,54 @@ export default function PaymentPage() {
                 </motion.div>
 
                 {/* Account Info Card */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {paymentMethod && (() => {
                         const selected = paymentMethods.find(m => m.id === paymentMethod);
                         if (!selected) return null;
                         return (
                             <motion.div
                                 key={paymentMethod}
-                                className="rounded-lg border border-blue-100 bg-blue-50/50 p-4"
-                                initial={{ opacity: 0, y: -8, height: 0 }}
-                                animate={{ opacity: 1, y: 0, height: "auto" }}
-                                exit={{ opacity: 0, y: -8, height: 0 }}
-                                transition={{ duration: 0.25, ease: "easeOut" }}
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ height: { type: "spring", stiffness: 500, damping: 40, mass: 0.8 }, opacity: { duration: 0.2 } }}
+                                style={{ overflow: "hidden" }}
                             >
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-8 h-8 rounded-md flex items-center justify-center overflow-hidden shrink-0">
-                                        <img src={selected.logo} alt={selected.label} className="w-full h-full object-contain" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-700">{selected.id === "bni" ? "Transfer via BNI" : `Via ${selected.label}`}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between bg-white rounded-lg px-3.5 py-2.5 border border-gray-100">
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-800">{selected.account}</p>
-                                        <p className="text-xs text-gray-500">A.n {selected.accountName}</p>
-                                    </div>
-                                    <motion.button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigator.clipboard.writeText(selected.account);
-                                            setPopup({ title: "Tersalin ✓", message: `Nomor ${selected.id === "bni" ? "rekening" : selected.label} berhasil disalin.` });
-                                        }}
-                                        className="px-3 py-1.5 rounded-lg bg-[#4f6ef7] text-white text-xs font-medium hover:bg-[#4060e0] transition-colors flex items-center gap-1.5 shrink-0"
-                                        whileTap={{ scale: 0.93 }}
+                                <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 mb-0">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.08, duration: 0.25, ease: "easeOut" }}
                                     >
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                        </svg>
-                                        Salin
-                                    </motion.button>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-8 h-8 rounded-md flex items-center justify-center overflow-hidden shrink-0">
+                                                <img src={selected.logo} alt={selected.label} className="w-full h-full object-contain" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-700">{selected.id === "bni" ? "Transfer via BNI" : `Via ${selected.label}`}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-white rounded-lg px-3.5 py-2.5 border border-gray-100">
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-800">{selected.account}</p>
+                                                <p className="text-xs text-gray-500">A.n {selected.accountName}</p>
+                                            </div>
+                                            <motion.button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigator.clipboard.writeText(selected.account);
+                                                    setPopup({ title: "Tersalin ✓", message: `Nomor ${selected.id === "bni" ? "rekening" : selected.label} berhasil disalin.` });
+                                                }}
+                                                className="px-3 py-1.5 rounded-lg bg-[#4f6ef7] text-white text-xs font-medium hover:bg-[#4060e0] transition-colors flex items-center gap-1.5 shrink-0"
+                                                whileTap={{ scale: 0.93 }}
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                                </svg>
+                                                Salin
+                                            </motion.button>
+                                        </div>
+                                    </motion.div>
                                 </div>
                             </motion.div>
                         );
