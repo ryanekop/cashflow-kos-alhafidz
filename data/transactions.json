@@ -1714,5 +1714,27 @@
     "status": "admin-set",
     "date": "2026-03-02T10:24:26.058Z",
     "notes": "Diset oleh admin"
+  },
+  {
+    "id": 1772636237427,
+    "memberId": 0,
+    "memberName": "Pengeluaran",
+    "type": "pengeluaran",
+    "month": "2026-03",
+    "amount": -42000,
+    "status": "expense",
+    "date": "2026-03-04T14:57:17.427Z",
+    "notes": "Beli Lampu Kamar Riksa"
+  },
+  {
+    "id": 1772637771065,
+    "memberId": 1,
+    "memberName": "Rizki",
+    "type": "kas",
+    "month": "2026-03",
+    "amount": 10000,
+    "status": "none",
+    "date": "2026-03-04T15:22:51.065Z",
+    "notes": "Diset oleh admin"
   }
 ]
