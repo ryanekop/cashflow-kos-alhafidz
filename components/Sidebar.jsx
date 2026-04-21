@@ -62,10 +62,12 @@ export default function Sidebar() {
     const { isDark, toggleTheme, mounted } = useTheme();
     const [collapsed, setCollapsed] = useState(false);
 
-    // persist collapsed state
     useEffect(() => {
-        const saved = localStorage.getItem("sidebar-collapsed");
-        if (saved === "true") setCollapsed(true);
+        const timeoutId = setTimeout(() => {
+            setCollapsed(localStorage.getItem("sidebar-collapsed") === "true");
+        }, 0);
+
+        return () => clearTimeout(timeoutId);
     }, []);
 
     // Sync CSS variable with collapsed state

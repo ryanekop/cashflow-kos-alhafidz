@@ -13,16 +13,20 @@ export default function ThemeProvider({ children }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        const saved = localStorage.getItem("theme");
-        const prefersDark = saved === "dark";
-        setIsDark(prefersDark);
-        if (prefersDark) {
-            document.documentElement.classList.add("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-        }
-        setMounted(true);
+        const timeoutId = setTimeout(() => {
+            const prefersDark = localStorage.getItem("theme") === "dark";
+            setIsDark(prefersDark);
+            document.documentElement.classList.toggle("dark", prefersDark);
+            setMounted(true);
+        }, 0);
+
+        return () => clearTimeout(timeoutId);
     }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+        document.documentElement.classList.toggle("dark", isDark);
+    }, [isDark, mounted]);
 
     const toggleTheme = () => {
         setIsDark(prev => {
