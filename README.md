@@ -18,6 +18,21 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
+## Admin Configuration
+
+Copy `.env.example` to `.env.local`, then configure both values before using the Admin Panel:
+
+```bash
+ADMIN_PASSWORD=use-a-new-password
+ADMIN_SESSION_SECRET=use-a-long-random-secret
+```
+
+`ADMIN_PASSWORD` is checked only on the server. `ADMIN_SESSION_SECRET` signs the admin session cookie, which expires after 12 hours.
+
+Important: earlier versions exposed an admin password in client-side source. Rotate that password when deploying this version; do not reuse the previous value.
+
+The Admin Panel tab **Isi WiFi** controls which months residents may fill in. New installations begin with no open months, so an admin must open at least one month before residents can submit WiFi usage.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

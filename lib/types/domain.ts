@@ -34,6 +34,10 @@ export interface WifiUsage {
   date: string;
 }
 
+export interface WifiSettings {
+  openMonths: string[];
+}
+
 export interface WifiDebt {
   id: number;
   memberId: number;

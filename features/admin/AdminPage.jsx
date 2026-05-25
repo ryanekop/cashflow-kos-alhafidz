@@ -3,14 +3,28 @@
 import { startTransition, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import * as XLSX from "xlsx";
-import { ADMIN_PASSWORD, MONTH_LABELS } from "@/lib/shared/constants";
+import { useToast } from "@/components/ui/toast";
+import { MONTH_LABELS } from "@/lib/shared/constants";
 import { calculateKas, calculateMemberWifiAmount } from "@/lib/shared/cashflow";
 import { formatIDR } from "@/lib/shared/format";
 
 const inputCls = "form-control";
 
+async function requestJson(url, options) {
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || "Terjadi kesalahan. Silakan coba lagi.");
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
 export default function AdminPage() {
+  const { showToast } = useToast();
   const [authenticated, setAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [password, setPassword] = useState("");
   const [pwError, setPwError] = useState(false);
   const [members, setMembers] = useState([]);
@@ -18,10 +32,11 @@ export default function AdminPage() {
   const [wifiBills, setWifiBills] = useState([]);
   const [wifiUsage, setWifiUsage] = useState([]);
   const [wifiDebts, setWifiDebts] = useState([]);
+  const [wifiSettings, setWifiSettings] = useState({ openMonths: [] });
   const [activeTab, setActiveTab] = useState("status");
-  const [toast, setToast] = useState("");
   const [kasPicker, setKasPicker] = useState({});
   const [statusMonth, setStatusMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [openMonth, setOpenMonth] = useState(new Date().toISOString().slice(0, 7));
   const [memberForm, setMemberForm] = useState({ name: "", status: "full" });
   const [txType, setTxType] = useState("pengeluaran");
   const [expenseForm, setExpenseForm] = useState({
@@ -40,30 +55,33 @@ export default function AdminPage() {
   });
 
   const fetchAll = useCallback(async () => {
-    const [nextMembers, nextTransactions, nextWifiBills, nextWifiUsage, nextWifiDebts] = await Promise.all([
-      fetch("/api/members").then((response) => response.json()),
-      fetch("/api/transactions").then((response) => response.json()),
-      fetch("/api/wifi-bills").then((response) => response.json()),
-      fetch("/api/wifi-usage").then((response) => response.json()),
-      fetch("/api/wifi-debts").then((response) => response.json()),
-    ]);
+    try {
+      const [nextMembers, nextTransactions, nextWifiBills, nextWifiUsage, nextWifiDebts, nextWifiSettings] = await Promise.all([
+        requestJson("/api/members"),
+        requestJson("/api/transactions"),
+        requestJson("/api/wifi-bills"),
+        requestJson("/api/wifi-usage"),
+        requestJson("/api/wifi-debts"),
+        requestJson("/api/wifi-settings"),
+      ]);
 
-    setMembers(nextMembers);
-    setTransactions(nextTransactions);
-    setWifiBills(nextWifiBills);
-    setWifiUsage(nextWifiUsage);
-    setWifiDebts(nextWifiDebts);
-  }, []);
+      setMembers(nextMembers);
+      setTransactions(nextTransactions);
+      setWifiBills(nextWifiBills);
+      setWifiUsage(nextWifiUsage);
+      setWifiDebts(nextWifiDebts);
+      setWifiSettings(nextWifiSettings);
+    } catch (error) {
+      showToast(error.message, "error");
+    }
+  }, [showToast]);
 
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (sessionStorage.getItem("admin_auth") === "true") {
-        setAuthenticated(true);
-      }
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
-  }, []);
+    requestJson("/api/admin/session")
+      .then((data) => setAuthenticated(data.authenticated))
+      .catch((error) => showToast(error.message, "error"))
+      .finally(() => setCheckingAuth(false));
+  }, [showToast]);
 
   useEffect(() => {
     if (authenticated) {
@@ -77,118 +95,140 @@ export default function AdminPage() {
     }
   }, [authenticated, fetchAll]);
 
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(""), 3000);
+  const handleRequestError = (error) => {
+    if (error.status === 401) {
+      setAuthenticated(false);
+    }
+    showToast(error.message, "error");
   };
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    try {
+      await requestJson("/api/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
       setAuthenticated(true);
-      sessionStorage.setItem("admin_auth", "true");
-      return;
+      setPassword("");
+      setPwError(false);
+      showToast("Login admin berhasil.", "success");
+    } catch (error) {
+      setPwError(true);
+      setTimeout(() => setPwError(false), 2000);
+      showToast(error.message, "error");
     }
-
-    setPwError(true);
-    setTimeout(() => setPwError(false), 2000);
   };
 
   const calcWifiForMember = (memberId, month) =>
     calculateMemberWifiAmount(memberId, month, wifiBills, wifiUsage);
 
   const togglePaymentStatus = async (memberId, memberName, type, month, currentlyPaid) => {
-    if (currentlyPaid) {
-      const tx = transactions.find(
-        (transaction) =>
-          transaction.memberId === memberId &&
-          transaction.type === type &&
-          transaction.month === month,
-      );
+    try {
+      if (currentlyPaid) {
+        const tx = transactions.find(
+          (transaction) =>
+            transaction.memberId === memberId &&
+            transaction.type === type &&
+            transaction.month === month,
+        );
 
-      if (tx) {
-        if (type === "wifi") {
-          await fetch("/api/wifi-debts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ memberId, memberName, month, amount: tx.amount }),
-          });
+        if (tx) {
+          if (type === "wifi") {
+            await requestJson("/api/wifi-debts", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ memberId, memberName, month, amount: tx.amount }),
+            });
+          }
+
+          await requestJson(`/api/transactions?id=${tx.id}`, { method: "DELETE" });
+          showToast(`${type.toUpperCase()} ${memberName} (${month}): BELUM BAYAR`, "success");
         }
 
-        await fetch(`/api/transactions?id=${tx.id}`, { method: "DELETE" });
-        showToast(`${type.toUpperCase()} ${memberName} (${month}): BELUM BAYAR`);
+        await fetchAll();
+        return;
       }
 
-      fetchAll();
-      return;
+      if (type === "kas") {
+        setKasPicker((prev) => ({ ...prev, [memberId]: true }));
+        return;
+      }
+
+      const debt = wifiDebts.find((entry) => entry.memberId === memberId && entry.month === month);
+      let amount;
+
+      if (debt) {
+        amount = debt.amount;
+        await requestJson(`/api/wifi-debts?memberId=${memberId}&month=${month}`, { method: "DELETE" });
+      } else {
+        amount = calcWifiForMember(memberId, month);
+      }
+
+      await requestJson("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId,
+          memberName,
+          type,
+          month,
+          amount,
+          status: "admin-set",
+          notes: "Diset oleh admin",
+        }),
+      });
+      showToast(`WIFI ${memberName} (${month}): SUDAH BAYAR - ${formatIDR(amount)}`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
     }
-
-    if (type === "kas") {
-      setKasPicker((prev) => ({ ...prev, [memberId]: true }));
-      return;
-    }
-
-    const debt = wifiDebts.find((entry) => entry.memberId === memberId && entry.month === month);
-    let amount;
-
-    if (debt) {
-      amount = debt.amount;
-      await fetch(`/api/wifi-debts?memberId=${memberId}&month=${month}`, { method: "DELETE" });
-    } else {
-      amount = calcWifiForMember(memberId, month);
-    }
-
-    await fetch("/api/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        memberId,
-        memberName,
-        type,
-        month,
-        amount,
-        status: "admin-set",
-        notes: "Diset oleh admin",
-      }),
-    });
-    showToast(`WIFI ${memberName} (${month}): SUDAH BAYAR — ${formatIDR(amount)}`);
-    fetchAll();
   };
 
   const confirmKasPayment = async (memberId, memberName, month, status) => {
-    const amount = calculateKas(month, status);
-    await fetch("/api/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        memberId,
-        memberName,
-        type: "kas",
-        month,
-        amount,
-        status,
-        notes: "Diset oleh admin",
-      }),
-    });
-    setKasPicker((prev) => ({ ...prev, [memberId]: false }));
-    showToast(`KAS ${memberName} (${month}): SUDAH BAYAR — ${formatIDR(amount)}`);
-    fetchAll();
+    try {
+      const amount = calculateKas(month, status);
+      await requestJson("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId,
+          memberName,
+          type: "kas",
+          month,
+          amount,
+          status,
+          notes: "Diset oleh admin",
+        }),
+      });
+      setKasPicker((prev) => ({ ...prev, [memberId]: false }));
+      showToast(`KAS ${memberName} (${month}): SUDAH BAYAR - ${formatIDR(amount)}`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleAddMember = async (event) => {
     event.preventDefault();
     if (!memberForm.name) {
+      showToast("Nama member wajib diisi.", "warning");
       return;
     }
 
-    await fetch("/api/members", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(memberForm),
-    });
-    setMemberForm({ name: "", status: "full" });
-    showToast(`Member ${memberForm.name} ditambahkan`);
-    fetchAll();
+    try {
+      await requestJson("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(memberForm),
+      });
+      setMemberForm({ name: "", status: "full" });
+      showToast(`Member ${memberForm.name} ditambahkan`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleDeleteMember = async (id, name) => {
@@ -196,24 +236,33 @@ export default function AdminPage() {
       return;
     }
 
-    await fetch(`/api/members?id=${id}`, { method: "DELETE" });
-    showToast(`Member ${name} dihapus`);
-    fetchAll();
+    try {
+      await requestJson(`/api/members?id=${id}`, { method: "DELETE" });
+      showToast(`Member ${name} dihapus`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleWifi = async (event) => {
     event.preventDefault();
-    if (!wifiForm.amount) {
+    if (!wifiForm.month || !wifiForm.amount) {
+      showToast("Bulan dan nominal tagihan WiFi wajib diisi.", "warning");
       return;
     }
 
-    await fetch("/api/wifi-bills", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ month: wifiForm.month, amount: parseInt(wifiForm.amount, 10) }),
-    });
-    showToast("Tagihan WiFi disimpan");
-    fetchAll();
+    try {
+      await requestJson("/api/wifi-bills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: wifiForm.month, amount: parseInt(wifiForm.amount, 10) }),
+      });
+      showToast("Tagihan WiFi disimpan", "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleDeleteTx = async (id) => {
@@ -221,9 +270,13 @@ export default function AdminPage() {
       return;
     }
 
-    await fetch(`/api/transactions?id=${id}`, { method: "DELETE" });
-    showToast("Transaksi dihapus");
-    fetchAll();
+    try {
+      await requestJson(`/api/transactions?id=${id}`, { method: "DELETE" });
+      showToast("Transaksi dihapus", "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleDeleteWifiBill = async (month) => {
@@ -231,14 +284,18 @@ export default function AdminPage() {
       return;
     }
 
-    const bills = wifiBills.filter((bill) => bill.month !== month);
-    await fetch("/api/wifi-bills", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bills),
-    });
-    showToast(`Tagihan WiFi ${month} dihapus`);
-    fetchAll();
+    try {
+      const bills = wifiBills.filter((bill) => bill.month !== month);
+      await requestJson("/api/wifi-bills", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bills),
+      });
+      showToast(`Tagihan WiFi ${month} dihapus`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleDeleteWifiUsage = async (id) => {
@@ -246,65 +303,134 @@ export default function AdminPage() {
       return;
     }
 
-    await fetch(`/api/wifi-usage?id=${id}`, { method: "DELETE" });
-    showToast("WiFi usage dihapus");
-    fetchAll();
+    try {
+      await requestJson(`/api/wifi-usage?id=${id}`, { method: "DELETE" });
+      showToast("Data Isi WiFi dihapus", "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
+  const handleUpdateWifiUsage = async (entry, level) => {
+    try {
+      await requestJson("/api/wifi-usage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...entry, level }),
+      });
+      showToast(`Pemakaian WiFi ${entry.memberName} diperbarui`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
+  const saveOpenMonths = async (openMonths, successMessage) => {
+    try {
+      const settings = await requestJson("/api/wifi-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ openMonths }),
+      });
+      setWifiSettings(settings);
+      showToast(successMessage, "success");
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
+  const handleOpenWifiMonth = async (event) => {
+    event.preventDefault();
+    if (!openMonth) {
+      showToast("Pilih bulan yang akan dibuka.", "warning");
+      return;
+    }
+
+    if (wifiSettings.openMonths.includes(openMonth)) {
+      showToast(`Bulan ${openMonth} sudah terbuka.`, "info");
+      return;
+    }
+
+    await saveOpenMonths([...wifiSettings.openMonths, openMonth], `Isi WiFi ${openMonth} dibuka.`);
+  };
+
+  const handleCloseWifiMonth = async (month) => {
+    if (!confirm(`Tutup pengisian WiFi bulan ${month}?`)) {
+      return;
+    }
+
+    await saveOpenMonths(
+      wifiSettings.openMonths.filter((entry) => entry !== month),
+      `Isi WiFi ${month} ditutup.`,
+    );
   };
 
   const handleAddExpense = async (event) => {
     event.preventDefault();
     if (!expenseForm.amount || !expenseForm.notes) {
+      showToast("Nominal dan keterangan pengeluaran wajib diisi.", "warning");
       return;
     }
 
-    await fetch("/api/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        memberId: 0,
-        memberName: "Pengeluaran",
-        type: "pengeluaran",
-        month: expenseForm.date.slice(0, 7),
-        amount: -Math.abs(parseInt(expenseForm.amount, 10)),
-        status: "expense",
-        notes: expenseForm.notes,
-        date: new Date(expenseForm.date).toISOString(),
-      }),
-    });
+    try {
+      await requestJson("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: 0,
+          memberName: "Pengeluaran",
+          type: "pengeluaran",
+          month: expenseForm.date.slice(0, 7),
+          amount: -Math.abs(parseInt(expenseForm.amount, 10)),
+          status: "expense",
+          notes: expenseForm.notes,
+          date: new Date(expenseForm.date).toISOString(),
+        }),
+      });
 
-    showToast(`Pengeluaran ${formatIDR(parseInt(expenseForm.amount, 10))} ditambahkan`);
-    setExpenseForm({ amount: "", date: new Date().toISOString().slice(0, 10), notes: "" });
-    fetchAll();
+      showToast(`Pengeluaran ${formatIDR(parseInt(expenseForm.amount, 10))} ditambahkan`, "success");
+      setExpenseForm({ amount: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleAddKasManual = async (event) => {
     event.preventDefault();
     if (!kasForm.memberId || !kasForm.month) {
+      showToast("Member dan bulan kas wajib dipilih.", "warning");
       return;
     }
 
     const member = members.find((entry) => entry.id === parseInt(kasForm.memberId, 10));
     if (!member) {
+      showToast("Member tidak ditemukan.", "error");
       return;
     }
 
-    const amount = calculateKas(kasForm.month, kasForm.status);
-    await fetch("/api/transactions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        memberId: member.id,
-        memberName: member.name,
-        type: "kas",
-        month: kasForm.month,
-        amount,
-        status: kasForm.status,
-        notes: "Ditambahkan manual oleh admin",
-      }),
-    });
-    showToast(`Kas ${member.name} (${kasForm.month}) ${formatIDR(amount)} ditambahkan`);
-    setKasForm((prev) => ({ ...prev, memberId: "" }));
-    fetchAll();
+    try {
+      const amount = calculateKas(kasForm.month, kasForm.status);
+      await requestJson("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: member.id,
+          memberName: member.name,
+          type: "kas",
+          month: kasForm.month,
+          amount,
+          status: kasForm.status,
+          notes: "Ditambahkan manual oleh admin",
+        }),
+      });
+      showToast(`Kas ${member.name} (${kasForm.month}) ${formatIDR(amount)} ditambahkan`, "success");
+      setKasForm((prev) => ({ ...prev, memberId: "" }));
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
   };
 
   const handleExportExcel = () => {
@@ -382,8 +508,12 @@ export default function AdminPage() {
     XLSX.utils.book_append_sheet(workbook, allSheet, "Semua Transaksi");
 
     XLSX.writeFile(workbook, `Kas_Alhafidz_${exportYear}.xlsx`);
-    showToast("File Excel berhasil didownload!");
+    showToast("File Excel berhasil didownload!", "success");
   };
+
+  if (checkingAuth) {
+    return <p className="py-16 text-center text-sm text-gray-400">Memeriksa sesi admin...</p>;
+  }
 
   if (!authenticated) {
     return (
@@ -480,21 +610,20 @@ export default function AdminPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Admin Panel</h1>
         <button
-          onClick={() => {
-            sessionStorage.removeItem("admin_auth");
-            setAuthenticated(false);
+          onClick={async () => {
+            try {
+              await requestJson("/api/admin/session", { method: "DELETE" });
+              setAuthenticated(false);
+              showToast("Anda sudah logout.", "info");
+            } catch (error) {
+              handleRequestError(error);
+            }
           }}
           className="text-xs text-gray-400 transition-colors hover:text-red-500"
         >
           Logout
         </button>
       </div>
-
-      {toast ? (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-800/30 dark:bg-green-900/20 dark:text-green-400">
-          ✓ {toast}
-        </div>
-      ) : null}
 
       <div className="surface-card flex gap-1.5 overflow-x-auto p-1 no-scrollbar">
         {tabs.map((tab) => (
@@ -670,7 +799,29 @@ export default function AdminPage() {
       {activeTab === "wifi-usage" ? (
         <div className="surface-card p-5">
           <h2 className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-200">Data Isi WiFi</h2>
-          <p className="mb-4 text-xs text-gray-400">List member yang mengisi WiFi per bulan</p>
+          <p className="mb-4 text-xs text-gray-400">Atur bulan yang boleh diisi dan koreksi data member</p>
+          <div className="mb-5 rounded-xl border border-purple-100 bg-purple-50/50 p-4 dark:border-purple-800/30 dark:bg-purple-900/15">
+            <h3 className="mb-3 text-xs font-semibold text-gray-700 dark:text-gray-200">Bulan Terbuka untuk Penghuni</h3>
+            <form onSubmit={handleOpenWifiMonth} className="flex flex-col gap-2 sm:flex-row">
+              <input type="month" value={openMonth} onChange={(event) => setOpenMonth(event.target.value)} className={inputCls} />
+              <button type="submit" className="shrink-0 rounded-lg bg-[var(--color-wifi)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#6b4fe0]">
+                Buka Bulan
+              </button>
+            </form>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {wifiSettings.openMonths.map((month) => (
+                <span key={month} className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white px-2.5 py-1.5 text-xs font-medium text-purple-600 dark:border-purple-700/50 dark:bg-[#1e1e38] dark:text-purple-300">
+                  {month}
+                  <button type="button" onClick={() => handleCloseWifiMonth(month)} className="text-gray-400 hover:text-red-500" aria-label={`Tutup bulan ${month}`}>
+                    ×
+                  </button>
+                </span>
+              ))}
+              {wifiSettings.openMonths.length === 0 ? (
+                <p className="text-xs text-amber-600 dark:text-amber-400">Belum ada bulan terbuka. Penghuni tidak dapat mengisi WiFi.</p>
+              ) : null}
+            </div>
+          </div>
           <div className="space-y-3">
             {(() => {
               const grouped = {};
@@ -695,9 +846,14 @@ export default function AdminPage() {
                         <div key={entry.id} className="flex items-center justify-between rounded bg-white px-2 py-1.5 dark:bg-[#1a1a2e]">
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-700 dark:text-gray-200">{member?.name || entry.memberId}</span>
-                            <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${entry.level === "full" ? "bg-blue-50 text-[var(--color-brand)] dark:bg-blue-900/25" : "bg-amber-50 text-amber-600 dark:bg-amber-900/25 dark:text-amber-400"}`}>
-                              {entry.level}
-                            </span>
+                            <select
+                              value={entry.level}
+                              onChange={(event) => handleUpdateWifiUsage(entry, event.target.value)}
+                              className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 dark:border-gray-600 dark:bg-[#2a2a4a] dark:text-gray-200"
+                            >
+                              <option value="full">full</option>
+                              <option value="half">half</option>
+                            </select>
                           </div>
                           <button onClick={() => handleDeleteWifiUsage(entry.id)} className="text-gray-300 transition-colors hover:text-red-400">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

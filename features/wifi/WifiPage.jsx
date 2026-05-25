@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Field, SelectInput, TextInput } from "@/components/ui/field";
+import { Field, SelectInput } from "@/components/ui/field";
 import Modal from "@/components/ui/modal";
 import PageHeading from "@/components/ui/page-heading";
+import { useToast } from "@/components/ui/toast";
 import { calculateMemberWifiAmount } from "@/lib/shared/cashflow";
 import { formatIDR, formatMonthLabel } from "@/lib/shared/format";
 
@@ -23,16 +24,30 @@ const staggerContainer = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
+async function requestJson(url, options) {
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Terjadi kesalahan. Silakan coba lagi.");
+  }
+  return data;
+}
+
 export default function WifiPage({ initialData }) {
+  const { showToast } = useToast();
+  const openMonths = initialData.wifiSettings.openMonths;
+  const selectableMonths = useMemo(
+    () => [...new Set([...openMonths, ...initialData.wifiBills.map((entry) => entry.month), ...initialData.wifiUsage.map((entry) => entry.month)])].sort().reverse(),
+    [initialData.wifiBills, initialData.wifiUsage, openMonths],
+  );
   const [selectedMember, setSelectedMember] = useState("");
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [month, setMonth] = useState(openMonths[0] ?? selectableMonths[0] ?? "");
   const [level, setLevel] = useState("full");
   const [wifiUsage, setWifiUsage] = useState(initialData.wifiUsage);
-  const [popup, setPopup] = useState(null);
   const [pendingUsage, setPendingUsage] = useState(null);
-  const [successMsg, setSuccessMsg] = useState("");
 
   const selectedMemberId = selectedMember ? parseInt(selectedMember, 10) : 0;
+  const isMonthOpen = openMonths.includes(month);
   const bill = initialData.wifiBills.find((entry) => entry.month === month);
   const monthUsage = useMemo(() => wifiUsage.filter((entry) => entry.month === month), [month, wifiUsage]);
   const fullUsers = monthUsage.filter((entry) => entry.level === "full").length;
@@ -50,18 +65,23 @@ export default function WifiPage({ initialData }) {
     : 0;
 
   const refreshUsage = async () => {
-    const nextUsage = await fetch("/api/wifi-usage").then((response) => response.json());
+    const nextUsage = await requestJson("/api/wifi-usage");
     setWifiUsage(nextUsage);
   };
 
   const handleSubmit = () => {
     if (!selectedMember) {
-      setPopup({ title: "Perhatian", message: "Pilih nama kamu dulu!" });
+      showToast("Pilih nama kamu dulu!", "warning");
       return;
     }
 
     if (!month) {
-      setPopup({ title: "Perhatian", message: "Pilih bulan!" });
+      showToast("Belum ada bulan WiFi yang dapat dipilih.", "warning");
+      return;
+    }
+
+    if (!isMonthOpen) {
+      showToast("Bulan WiFi ini sudah ditutup oleh admin.", "warning");
       return;
     }
 
@@ -87,45 +107,51 @@ export default function WifiPage({ initialData }) {
     const submission = pendingUsage;
     setPendingUsage(null);
 
-    await fetch("/api/wifi-usage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        memberId: submission.memberId,
-        memberName: submission.memberName,
-        month: submission.month,
-        level: submission.level,
-      }),
-    });
+    try {
+      await requestJson("/api/wifi-usage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: submission.memberId,
+          memberName: submission.memberName,
+          month: submission.month,
+          level: submission.level,
+        }),
+      });
 
-    setSuccessMsg(
-      `Data WiFi kamu untuk ${submission.month} ${submission.isUpdate ? "diubah" : "tersimpan"}: ${
-        submission.level === "full" ? "Full" : "Setengah Bulan"
-      }`,
-    );
-    setTimeout(() => setSuccessMsg(""), 4000);
-    await refreshUsage();
+      showToast(
+        `Data WiFi kamu untuk ${submission.month} ${submission.isUpdate ? "diubah" : "tersimpan"}: ${
+          submission.level === "full" ? "Full" : "Setengah Bulan"
+        }`,
+        "success",
+      );
+      await refreshUsage();
+    } catch (error) {
+      showToast(error.message, "error");
+    }
   };
 
-  const handleDeleteUsage = async (id, name) => {
-    if (!confirm(`Hapus data WiFi untuk ${name}?`)) {
+  const handleDeleteUsage = async (usage) => {
+    if (!openMonths.includes(usage.month)) {
+      showToast("Data pada bulan tertutup hanya dapat dihapus oleh admin.", "warning");
       return;
     }
 
-    await fetch(`/api/wifi-usage?id=${id}`, { method: "DELETE" });
-    await refreshUsage();
-    setSuccessMsg(`Data WiFi ${name} dihapus`);
-    setTimeout(() => setSuccessMsg(""), 3000);
+    if (!confirm(`Hapus data WiFi untuk ${usage.memberName}?`)) {
+      return;
+    }
+
+    try {
+      await requestJson(`/api/wifi-usage?id=${usage.id}`, { method: "DELETE" });
+      await refreshUsage();
+      showToast(`Data WiFi ${usage.memberName} dihapus`, "success");
+    } catch (error) {
+      showToast(error.message, "error");
+    }
   };
 
   return (
     <div className="mx-auto max-w-lg space-y-5">
-      <Modal open={Boolean(popup)} title={popup?.title} description={popup?.message} onClose={() => setPopup(null)}>
-        <button onClick={() => setPopup(null)} className="w-full rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-200 dark:hover:bg-[#3a3a5a]">
-          Tutup
-        </button>
-      </Modal>
-
       <Modal
         open={Boolean(pendingUsage)}
         title={pendingUsage?.isUpdate ? "Konfirmasi Perbarui Pemakaian WiFi" : "Konfirmasi Pemakaian WiFi"}
@@ -161,14 +187,6 @@ export default function WifiPage({ initialData }) {
         ) : null}
       </Modal>
 
-      <AnimatePresence>
-        {successMsg ? (
-          <motion.div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-700/50 dark:bg-green-900/20 dark:text-green-400" initial={{ opacity: 0, y: -20, height: 0 }} animate={{ opacity: 1, y: 0, height: "auto" }} exit={{ opacity: 0, y: -20, height: 0 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}>
-            ✓ {successMsg}
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <PageHeading centered title="Isi Pemakaian WiFi" description="Isi apakah kamu pakai WiFi bulan ini" />
       </motion.div>
@@ -187,7 +205,14 @@ export default function WifiPage({ initialData }) {
           </Field>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="Bulan">
-              <TextInput type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+              <SelectInput value={month} onChange={(event) => setMonth(event.target.value)}>
+                <option value="">Pilih Bulan...</option>
+                {selectableMonths.map((entry) => (
+                  <option key={entry} value={entry}>
+                    {formatMonthLabel(entry)}{openMonths.includes(entry) ? " (dibuka)" : " (ditutup)"}
+                  </option>
+                ))}
+              </SelectInput>
             </Field>
             <Field label="Pakai WiFi bulan ini?">
               <SelectInput value={level} onChange={(event) => setLevel(event.target.value)}>
@@ -196,9 +221,14 @@ export default function WifiPage({ initialData }) {
               </SelectInput>
             </Field>
           </div>
-          <motion.button onClick={handleSubmit} className="w-full rounded-lg bg-[var(--color-wifi)] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#6b4fe0]" whileTap={{ scale: 0.97 }}>
+          <motion.button onClick={handleSubmit} disabled={!isMonthOpen} className="w-full rounded-lg bg-[var(--color-wifi)] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#6b4fe0] disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600" whileTap={{ scale: isMonthOpen ? 0.97 : 1 }}>
             Simpan Pemakaian WiFi
           </motion.button>
+          {!isMonthOpen ? (
+            <p className="text-center text-xs text-amber-600 dark:text-amber-400">
+              {openMonths.length === 0 ? "Belum ada bulan yang dibuka admin untuk pengisian." : "Bulan ini sudah ditutup. Data hanya dapat dilihat."}
+            </p>
+          ) : null}
         </Card>
       </motion.div>
 
@@ -226,7 +256,7 @@ export default function WifiPage({ initialData }) {
         </motion.div>
       ) : null}
 
-      {!bill && month ? (
+      {!bill && month && isMonthOpen ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.4 }}>
           <Card className="p-5">
             <p className="text-center text-sm text-amber-600 dark:text-amber-400">Tagihan WiFi bulan {month} belum diinput admin</p>
@@ -246,12 +276,14 @@ export default function WifiPage({ initialData }) {
                     <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${usage.level === "full" ? "border border-blue-200 bg-blue-50 text-[var(--color-brand)] dark:border-blue-700/50 dark:bg-blue-900/30" : "border border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-700/50 dark:bg-amber-900/30 dark:text-amber-400"}`}>
                       {usage.level === "full" ? "FULL" : "SETENGAH"}
                     </span>
-                    <button onClick={() => handleDeleteUsage(usage.id, usage.memberName)} className="text-gray-300 transition-colors hover:text-red-400 dark:text-gray-600">
+                    {isMonthOpen ? (
+                    <button onClick={() => handleDeleteUsage(usage)} className="text-gray-300 transition-colors hover:text-red-400 dark:text-gray-600">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                       </svg>
                     </button>
+                    ) : null}
                   </div>
                 </motion.div>
               ))}

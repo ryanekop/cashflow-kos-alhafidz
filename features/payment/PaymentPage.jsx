@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Field, SelectInput, TextInput } from "@/components/ui/field";
 import Modal from "@/components/ui/modal";
 import PageHeading from "@/components/ui/page-heading";
+import { useToast } from "@/components/ui/toast";
 import { calculateKas, calculateMemberWifiAmount } from "@/lib/shared/cashflow";
 import { PAYMENT_METHODS, WHATSAPP_NUMBER } from "@/lib/shared/constants";
 import { formatIDR, formatMonthLabel } from "@/lib/shared/format";
@@ -22,9 +23,9 @@ const fadeUp = {
 };
 
 export default function PaymentPage({ initialData }) {
+  const { showToast } = useToast();
   const [selectedMember, setSelectedMember] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [popup, setPopup] = useState(null);
   const [whatsAppConfirmation, setWhatsAppConfirmation] = useState(null);
   const [kasEntries, setKasEntries] = useState([{ month: "", status: "full" }]);
   const [wifiEntries, setWifiEntries] = useState([{ month: "" }]);
@@ -131,12 +132,12 @@ export default function PaymentPage({ initialData }) {
 
   const handleWhatsApp = () => {
     if (!selectedMember) {
-      setPopup({ title: "Perhatian", message: "Pilih nama kamu dulu!" });
+      showToast("Pilih nama kamu dulu!", "warning");
       return;
     }
 
     if (!paymentMethod) {
-      setPopup({ title: "Perhatian", message: "Pilih metode pembayaran dulu!" });
+      showToast("Pilih metode pembayaran dulu!", "warning");
       return;
     }
 
@@ -144,7 +145,7 @@ export default function PaymentPage({ initialData }) {
     const activeWifi = wifiEntries.filter((entry) => entry.month && getWifiAmount(entry) > 0);
 
     if (!activeKas.length && !activeWifi.length) {
-      setPopup({ title: "Perhatian", message: "Pilih minimal satu bulan untuk kas atau WiFi!" });
+      showToast("Pilih minimal satu bulan untuk kas atau WiFi!", "warning");
       return;
     }
 
@@ -161,16 +162,13 @@ export default function PaymentPage({ initialData }) {
     });
 
     if (issues.length > 0) {
-      setPopup({ title: "Sudah Bayar ✓", message: `${issues.join(", ")} sudah dibayar.` });
+      showToast(`${issues.join(", ")} sudah dibayar.`, "info");
       return;
     }
 
     for (const entry of activeWifi) {
       if (!getWifiStatus(entry)) {
-        setPopup({
-          title: "Isi WiFi Dulu",
-          message: `Kamu belum mengisi pemakaian WiFi bulan ${entry.month}. Isi dulu di halaman 'Isi WiFi'.`,
-        });
+        showToast(`Kamu belum mengisi pemakaian WiFi bulan ${entry.month}. Isi dulu di halaman Isi WiFi.`, "warning");
         return;
       }
     }
@@ -205,16 +203,11 @@ export default function PaymentPage({ initialData }) {
     window.open(whatsAppConfirmation.url, "_blank");
     clearSavedData();
     setWhatsAppConfirmation(null);
+    showToast("Membuka WhatsApp untuk mengirim bukti pembayaran.", "success");
   };
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
-      <Modal open={Boolean(popup)} title={popup?.title} description={popup?.message} onClose={() => setPopup(null)}>
-        <button onClick={() => setPopup(null)} className="w-full rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-300 dark:hover:bg-[#3a3a5a]">
-          Tutup
-        </button>
-      </Modal>
-
       <Modal open={Boolean(whatsAppConfirmation)} title="Konfirmasi Kirim Bukti" onClose={() => setWhatsAppConfirmation(null)}>
         {whatsAppConfirmation ? (
           <>
@@ -487,13 +480,14 @@ export default function PaymentPage({ initialData }) {
                       <p className="text-xs text-gray-500 dark:text-gray-400">A.n {selected.accountName}</p>
                     </div>
                     <button
-                      onClick={(event) => {
+                      onClick={async (event) => {
                         event.stopPropagation();
-                        navigator.clipboard.writeText(selected.account);
-                        setPopup({
-                          title: "Tersalin ✓",
-                          message: `Nomor ${selected.id === "bni" ? "rekening" : selected.label} berhasil disalin.`,
-                        });
+                        try {
+                          await navigator.clipboard.writeText(selected.account);
+                          showToast(`Nomor ${selected.id === "bni" ? "rekening" : selected.label} berhasil disalin.`, "success");
+                        } catch {
+                          showToast("Nomor gagal disalin. Silakan salin secara manual.", "error");
+                        }
                       }}
                       className="flex shrink-0 items-center gap-1.5 rounded-lg bg-[var(--color-brand)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#4060e0]"
                     >
