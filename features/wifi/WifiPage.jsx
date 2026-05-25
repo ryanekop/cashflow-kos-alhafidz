@@ -7,7 +7,7 @@ import { Field, SelectInput, TextInput } from "@/components/ui/field";
 import Modal from "@/components/ui/modal";
 import PageHeading from "@/components/ui/page-heading";
 import { calculateMemberWifiAmount } from "@/lib/shared/cashflow";
-import { formatIDR } from "@/lib/shared/format";
+import { formatIDR, formatMonthLabel } from "@/lib/shared/format";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -29,6 +29,7 @@ export default function WifiPage({ initialData }) {
   const [level, setLevel] = useState("full");
   const [wifiUsage, setWifiUsage] = useState(initialData.wifiUsage);
   const [popup, setPopup] = useState(null);
+  const [pendingUsage, setPendingUsage] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
 
   const selectedMemberId = selectedMember ? parseInt(selectedMember, 10) : 0;
@@ -53,7 +54,7 @@ export default function WifiPage({ initialData }) {
     setWifiUsage(nextUsage);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedMember) {
       setPopup({ title: "Perhatian", message: "Pilih nama kamu dulu!" });
       return;
@@ -69,15 +70,37 @@ export default function WifiPage({ initialData }) {
       return;
     }
 
+    setPendingUsage({
+      memberId: selectedMemberId,
+      memberName: member.name,
+      month,
+      level,
+      isUpdate: wifiUsage.some((entry) => entry.memberId === selectedMemberId && entry.month === month),
+    });
+  };
+
+  const confirmSubmit = async () => {
+    if (!pendingUsage) {
+      return;
+    }
+
+    const submission = pendingUsage;
+    setPendingUsage(null);
+
     await fetch("/api/wifi-usage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId: selectedMemberId, memberName: member.name, month, level }),
+      body: JSON.stringify({
+        memberId: submission.memberId,
+        memberName: submission.memberName,
+        month: submission.month,
+        level: submission.level,
+      }),
     });
 
     setSuccessMsg(
-      `Data WiFi kamu untuk ${month} ${wifiUsage.find((entry) => entry.memberId === selectedMemberId && entry.month === month) ? "diubah" : "tersimpan"}: ${
-        level === "full" ? "Full" : "Setengah Bulan"
+      `Data WiFi kamu untuk ${submission.month} ${submission.isUpdate ? "diubah" : "tersimpan"}: ${
+        submission.level === "full" ? "Full" : "Setengah Bulan"
       }`,
     );
     setTimeout(() => setSuccessMsg(""), 4000);
@@ -101,6 +124,41 @@ export default function WifiPage({ initialData }) {
         <button onClick={() => setPopup(null)} className="w-full rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-200 dark:hover:bg-[#3a3a5a]">
           Tutup
         </button>
+      </Modal>
+
+      <Modal
+        open={Boolean(pendingUsage)}
+        title={pendingUsage?.isUpdate ? "Konfirmasi Perbarui Pemakaian WiFi" : "Konfirmasi Pemakaian WiFi"}
+        onClose={() => setPendingUsage(null)}
+      >
+        {pendingUsage ? (
+          <>
+            <div className="mb-4 space-y-2 rounded-lg border border-purple-100 bg-purple-50/60 p-3 text-sm dark:border-purple-800/30 dark:bg-purple-900/20">
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500 dark:text-gray-400">Nama</span>
+                <span className="text-right font-medium text-gray-800 dark:text-gray-100">{pendingUsage.memberName}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500 dark:text-gray-400">Bulan</span>
+                <span className="text-right font-medium text-gray-800 dark:text-gray-100">{formatMonthLabel(pendingUsage.month)}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500 dark:text-gray-400">Pemakaian</span>
+                <span className="text-right font-medium text-gray-800 dark:text-gray-100">
+                  {pendingUsage.level === "full" ? "Full (sebulan penuh)" : "Setengah bulan"}
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setPendingUsage(null)} className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-200 dark:hover:bg-[#3a3a5a]">
+                Batal
+              </button>
+              <button onClick={confirmSubmit} className="flex-1 rounded-lg bg-[var(--color-wifi)] py-2 text-sm font-medium text-white transition-colors hover:bg-[#6b4fe0]">
+                {pendingUsage.isUpdate ? "Perbarui" : "Simpan"}
+              </button>
+            </div>
+          </>
+        ) : null}
       </Modal>
 
       <AnimatePresence>

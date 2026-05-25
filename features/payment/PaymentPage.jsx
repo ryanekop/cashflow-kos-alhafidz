@@ -9,7 +9,7 @@ import Modal from "@/components/ui/modal";
 import PageHeading from "@/components/ui/page-heading";
 import { calculateKas, calculateMemberWifiAmount } from "@/lib/shared/cashflow";
 import { PAYMENT_METHODS, WHATSAPP_NUMBER } from "@/lib/shared/constants";
-import { formatIDR } from "@/lib/shared/format";
+import { formatIDR, formatMonthLabel } from "@/lib/shared/format";
 import { buildWhatsAppPaymentText, getPaymentMethod } from "@/lib/shared/payment";
 
 const fadeUp = {
@@ -25,6 +25,7 @@ export default function PaymentPage({ initialData }) {
   const [selectedMember, setSelectedMember] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [popup, setPopup] = useState(null);
+  const [whatsAppConfirmation, setWhatsAppConfirmation] = useState(null);
   const [kasEntries, setKasEntries] = useState([{ month: "", status: "full" }]);
   const [wifiEntries, setWifiEntries] = useState([{ month: "" }]);
   const didRestoreRef = useRef(false);
@@ -184,8 +185,26 @@ export default function PaymentPage({ initialData }) {
       wifiMonths: activeWifi.map((entry) => entry.month),
     });
 
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${url}`, "_blank");
+    setWhatsAppConfirmation({
+      memberName: selectedMemberName,
+      paymentMethod: getPaymentMethod(paymentMethod)?.label ?? "",
+      kasMonths: activeKas.map((entry) => entry.month),
+      wifiMonths: activeWifi.map((entry) => entry.month),
+      totalKas,
+      totalWifi,
+      totalPayment,
+      url: `https://wa.me/${WHATSAPP_NUMBER}?text=${url}`,
+    });
+  };
+
+  const confirmWhatsApp = () => {
+    if (!whatsAppConfirmation) {
+      return;
+    }
+
+    window.open(whatsAppConfirmation.url, "_blank");
     clearSavedData();
+    setWhatsAppConfirmation(null);
   };
 
   return (
@@ -194,6 +213,51 @@ export default function PaymentPage({ initialData }) {
         <button onClick={() => setPopup(null)} className="w-full rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-300 dark:hover:bg-[#3a3a5a]">
           Tutup
         </button>
+      </Modal>
+
+      <Modal open={Boolean(whatsAppConfirmation)} title="Konfirmasi Kirim Bukti" onClose={() => setWhatsAppConfirmation(null)}>
+        {whatsAppConfirmation ? (
+          <>
+            <div className="mb-4 space-y-2 rounded-lg border border-green-100 bg-green-50/60 p-3 text-sm dark:border-green-800/30 dark:bg-green-900/20">
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500 dark:text-gray-400">Nama</span>
+                <span className="text-right font-medium text-gray-800 dark:text-gray-100">{whatsAppConfirmation.memberName}</span>
+              </div>
+              {whatsAppConfirmation.totalKas > 0 ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Kas ({whatsAppConfirmation.kasMonths.map((entry) => formatMonthLabel(entry)).join(", ")})
+                  </span>
+                  <span className="shrink-0 font-medium text-gray-800 dark:text-gray-100">{formatIDR(whatsAppConfirmation.totalKas)}</span>
+                </div>
+              ) : null}
+              {whatsAppConfirmation.totalWifi > 0 ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    WiFi ({whatsAppConfirmation.wifiMonths.map((entry) => formatMonthLabel(entry)).join(", ")})
+                  </span>
+                  <span className="shrink-0 font-medium text-gray-800 dark:text-gray-100">{formatIDR(whatsAppConfirmation.totalWifi)}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between gap-3">
+                <span className="text-gray-500 dark:text-gray-400">Metode</span>
+                <span className="text-right font-medium text-gray-800 dark:text-gray-100">{whatsAppConfirmation.paymentMethod}</span>
+              </div>
+              <div className="flex justify-between gap-3 border-t border-green-200 pt-2 dark:border-green-800/40">
+                <span className="font-medium text-gray-600 dark:text-gray-300">Total</span>
+                <span className="text-base font-semibold text-gray-800 dark:text-gray-100">{formatIDR(whatsAppConfirmation.totalPayment)}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setWhatsAppConfirmation(null)} className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-300 dark:hover:bg-[#3a3a5a]">
+                Batal
+              </button>
+              <button onClick={confirmWhatsApp} className="flex-1 rounded-lg bg-[#25D366] py-2 text-sm font-medium text-white transition-colors hover:bg-[#1fb855]">
+                Kirim via WhatsApp
+              </button>
+            </div>
+          </>
+        ) : null}
       </Modal>
 
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
