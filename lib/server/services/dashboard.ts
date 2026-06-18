@@ -7,11 +7,13 @@ import { listWifiDebts } from "@/lib/server/repositories/wifi-debts";
 import { listWifiUsage } from "@/lib/server/repositories/wifi-usage";
 import { calculateKas, calculateMemberWifiAmount } from "@/lib/shared/cashflow";
 import { getCurrentMonth, enumerateMonths } from "@/lib/shared/date";
+import { getExitMonth, getMemberKasStatusForMonth, isMemberActive, isMemberActiveForMonth } from "@/lib/shared/members";
 import { MONTH_LABELS } from "@/lib/shared/constants";
 import type { Member, SummaryData } from "@/lib/types/domain";
 
 export function getSummaryData(): SummaryData {
   const members = listMembers();
+  const activeMembers = members.filter(isMemberActive);
   const transactions = listTransactions();
   const wifiBills = listWifiBills();
 
@@ -27,7 +29,7 @@ export function getSummaryData(): SummaryData {
   const currentMonth = getCurrentMonth();
   const currentWifiBill = wifiBills.find((bill) => bill.month === currentMonth)?.amount ?? 0;
 
-  const memberStatus = members.map((member) => {
+  const memberStatus = activeMembers.map((member) => {
     const kasTransaction = transactions.find(
       (transaction) =>
         transaction.memberId === member.id &&
@@ -83,7 +85,7 @@ export function getSummaryData(): SummaryData {
     currentMonth,
     memberStatus,
     chartData: Object.values(monthlyData).sort((left, right) => left.name.localeCompare(right.name)),
-    totalMembers: members.length,
+    totalMembers: activeMembers.length,
     totalTransactions: transactions.length,
   };
 }
@@ -111,19 +113,21 @@ function buildArrears() {
 
     if (kasTransactions.length > 0) {
       const firstMonth = kasTransactions.map((transaction) => transaction.month).sort()[0];
-      const allMonths = enumerateMonths(firstMonth, currentMonth);
+      const exitMonth = getExitMonth(member);
+      const lastMonth = exitMonth && exitMonth < currentMonth ? exitMonth : currentMonth;
+      const allMonths = enumerateMonths(firstMonth, lastMonth);
       const paidKasMonths = new Set(kasTransactions.map((transaction) => transaction.month));
 
       unpaidKas = allMonths
         .filter((month) => !paidKasMonths.has(month))
         .map((month) => ({
           month,
-          amount: calculateKas(month, member.status),
+          amount: calculateKas(month, getMemberKasStatusForMonth(member, month)),
         }));
     }
 
     const unpaidWifi = wifiDebts
-      .filter((entry) => entry.memberId === member.id)
+      .filter((entry) => entry.memberId === member.id && isMemberActiveForMonth(member, entry.month))
       .map((entry) => ({ month: entry.month, amount: entry.amount }));
 
     const paidWifiMonths = new Set([
@@ -134,6 +138,10 @@ function buildArrears() {
     ]);
 
     wifiBills.forEach((bill) => {
+      if (!isMemberActiveForMonth(member, bill.month)) {
+        return;
+      }
+
       if (paidWifiMonths.has(bill.month)) {
         return;
       }
@@ -190,7 +198,7 @@ function buildArrears() {
 }
 
 function buildRekap(year: number, type: "kas" | "wifi") {
-  const members = listMembers();
+  const members = listMembers().filter(isMemberActive);
   const transactions = listTransactions();
   const monthKeys = MONTH_LABELS.map((_, index) => `${year}-${String(index + 1).padStart(2, "0")}`);
 
@@ -211,7 +219,7 @@ function buildRekap(year: number, type: "kas" | "wifi") {
 
 export function getDashboardPageData() {
   const summary = getSummaryData();
-  const members = listMembers();
+  const members = listMembers().filter(isMemberActive);
   const transactions = listTransactions();
   const wifiBills = listWifiBills();
   const wifiUsage = listWifiUsage();

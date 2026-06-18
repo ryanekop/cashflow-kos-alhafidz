@@ -6,6 +6,8 @@ export interface Member {
   id: number;
   name: string;
   status: MemberStatus;
+  exitDate?: string | null;
+  exitKasStatus?: MemberStatus | null;
 }
 
 export interface Transaction {

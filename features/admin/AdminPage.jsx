@@ -3,12 +3,26 @@
 import { startTransition, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import * as XLSX from "xlsx";
+import Modal from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { MONTH_LABELS } from "@/lib/shared/constants";
 import { calculateKas, calculateMemberWifiAmount } from "@/lib/shared/cashflow";
 import { formatIDR } from "@/lib/shared/format";
+import { getMemberKasStatusForMonth, isMemberActive, isMemberActiveForMonth } from "@/lib/shared/members";
 
 const inputCls = "form-control";
+
+function getMemberStatusLabel(status) {
+  if (status === "full") {
+    return "Di kos";
+  }
+
+  if (status === "half") {
+    return "Setengah bulan";
+  }
+
+  return "Tidak di kos";
+}
 
 async function requestJson(url, options) {
   const response = await fetch(url, options);
@@ -38,6 +52,11 @@ export default function AdminPage() {
   const [statusMonth, setStatusMonth] = useState(new Date().toISOString().slice(0, 7));
   const [openMonth, setOpenMonth] = useState(new Date().toISOString().slice(0, 7));
   const [memberForm, setMemberForm] = useState({ name: "", status: "full" });
+  const [exitMember, setExitMember] = useState(null);
+  const [exitForm, setExitForm] = useState({
+    exitDate: new Date().toISOString().slice(0, 10),
+    exitKasStatus: "full",
+  });
   const [txType, setTxType] = useState("pengeluaran");
   const [expenseForm, setExpenseForm] = useState({
     amount: "",
@@ -245,6 +264,57 @@ export default function AdminPage() {
     }
   };
 
+  const startArchiveMember = (member) => {
+    setExitMember(member);
+    setExitForm({
+      exitDate: member.exitDate || new Date().toISOString().slice(0, 10),
+      exitKasStatus: member.exitKasStatus || member.status || "full",
+    });
+  };
+
+  const handleArchiveMember = async (event) => {
+    event.preventDefault();
+    if (!exitMember) {
+      return;
+    }
+
+    if (!exitForm.exitDate) {
+      showToast("Tanggal keluar wajib diisi.", "warning");
+      return;
+    }
+
+    try {
+      await requestJson("/api/members", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: exitMember.id,
+          exitDate: exitForm.exitDate,
+          exitKasStatus: exitForm.exitKasStatus,
+        }),
+      });
+      showToast(`${exitMember.name} ditandai keluar.`, "success");
+      setExitMember(null);
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
+  const handleReactivateMember = async (member) => {
+    try {
+      await requestJson("/api/members", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: member.id, exitDate: null, exitKasStatus: null }),
+      });
+      showToast(`${member.name} diaktifkan lagi.`, "success");
+      await fetchAll();
+    } catch (error) {
+      handleRequestError(error);
+    }
+  };
+
   const handleWifi = async (event) => {
     event.preventDefault();
     if (!wifiForm.month || !wifiForm.amount) {
@@ -407,6 +477,11 @@ export default function AdminPage() {
     const member = members.find((entry) => entry.id === parseInt(kasForm.memberId, 10));
     if (!member) {
       showToast("Member tidak ditemukan.", "error");
+      return;
+    }
+
+    if (!isMemberActiveForMonth(member, kasForm.month)) {
+      showToast("Member ini sudah keluar pada bulan yang dipilih.", "warning");
       return;
     }
 
@@ -605,8 +680,61 @@ export default function AdminPage() {
     return groups;
   })();
 
+  const activeMembers = members.filter(isMemberActive);
+  const exitedMembers = members.filter((member) => !isMemberActive(member));
+  const statusMonthMembers = members.filter((member) => isMemberActiveForMonth(member, statusMonth));
+  const kasSelectableMembers = members.filter((member) => isMemberActiveForMonth(member, kasForm.month));
+  const selectedKasMemberCanPay = kasSelectableMembers.some((member) => member.id === parseInt(kasForm.memberId || "0", 10));
+
   return (
     <div className="space-y-5">
+      <Modal
+        open={Boolean(exitMember)}
+        title="Tandai Penghuni Keluar"
+        description={exitMember ? `Catat tanggal keluar ${exitMember.name} dan status kas untuk bulan terakhir.` : ""}
+        onClose={() => setExitMember(null)}
+      >
+        <form onSubmit={handleArchiveMember} className="space-y-4">
+          <div>
+            <label htmlFor="exit-date" className="mb-1.5 block text-xs text-gray-500 dark:text-gray-400">Tanggal keluar</label>
+            <input
+              id="exit-date"
+              type="date"
+              value={exitForm.exitDate}
+              onChange={(event) => setExitForm((prev) => ({ ...prev, exitDate: event.target.value }))}
+              className={inputCls}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="exit-kas-status" className="mb-1.5 block text-xs text-gray-500 dark:text-gray-400">Status kas bulan keluar</label>
+            <select
+              id="exit-kas-status"
+              value={exitForm.exitKasStatus}
+              onChange={(event) => setExitForm((prev) => ({ ...prev, exitKasStatus: event.target.value }))}
+              className={inputCls}
+            >
+              <option value="full">Full</option>
+              <option value="half">Half</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          {exitForm.exitDate ? (
+            <div className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-800/30 dark:bg-amber-900/20 dark:text-amber-300">
+              Bulan {exitForm.exitDate.slice(0, 7)} dihitung sebagai {exitForm.exitKasStatus}. Setelah bulan itu, penghuni tidak ikut hitungan aktif.
+            </div>
+          ) : null}
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setExitMember(null)} className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#2a2a4a] dark:text-gray-200 dark:hover:bg-[#3a3a5a]">
+              Batal
+            </button>
+            <button type="submit" className="flex-1 rounded-lg bg-amber-500 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600">
+              Tandai Keluar
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Admin Panel</h1>
         <button
@@ -655,18 +783,19 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="space-y-2">
-            {members.map((member) => {
+            {statusMonthMembers.map((member) => {
               const kasTx = transactions.find((entry) => entry.memberId === member.id && entry.type === "kas" && entry.month === statusMonth);
               const wifiTx = transactions.find((entry) => entry.memberId === member.id && entry.type === "wifi" && entry.month === statusMonth);
               const hasPaidKas = Boolean(kasTx);
               const hasPaidWifi = Boolean(wifiTx);
               const showPicker = kasPicker[member.id] && !hasPaidKas;
+              const monthStatus = getMemberKasStatusForMonth(member, statusMonth);
 
               return (
                 <div key={member.id} className="rounded-lg bg-gray-50 p-3 dark:bg-[#1e1e38]">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white ${member.status === "full" ? "bg-[var(--color-success)]" : member.status === "half" ? "bg-[#e8a500]" : "bg-gray-400"}`}>
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white ${monthStatus === "full" ? "bg-[var(--color-success)]" : monthStatus === "half" ? "bg-[#e8a500]" : "bg-gray-400"}`}>
                         {member.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -711,6 +840,9 @@ export default function AdminPage() {
                 </div>
               );
             })}
+            {statusMonthMembers.length === 0 ? (
+              <p className="py-4 text-center text-sm text-gray-400 dark:text-gray-500">Tidak ada member untuk bulan ini.</p>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -735,26 +867,71 @@ export default function AdminPage() {
             </div>
             <button type="submit" className="btn-primary w-full rounded-lg py-2.5 text-sm font-medium transition-colors">Tambah Member</button>
           </form>
-          <div className="space-y-1.5">
-            {members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-2.5 dark:bg-[#1e1e38]">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ${member.status === "full" ? "bg-[var(--color-success)]" : member.status === "half" ? "bg-[#e8a500]" : "bg-gray-400"}`}>
-                    {member.name.substring(0, 2).toUpperCase()}
+          <div className="space-y-5">
+            <div>
+              <h3 className="mb-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Aktif ({activeMembers.length})</h3>
+              <div className="space-y-1.5">
+                {activeMembers.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-2.5 dark:bg-[#1e1e38]">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ${member.status === "full" ? "bg-[var(--color-success)]" : member.status === "half" ? "bg-[#e8a500]" : "bg-gray-400"}`}>
+                        {member.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{member.name}</p>
+                        <p className="text-[11px] text-gray-400">{getMemberStatusLabel(member.status)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => startArchiveMember(member)} className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-600 transition-colors hover:bg-amber-100 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
+                        Tandai Keluar
+                      </button>
+                      <button type="button" onClick={() => handleDeleteMember(member.id, member.name)} className="text-gray-300 transition-colors hover:text-red-400" aria-label={`Hapus ${member.name}`}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{member.name}</p>
-                    <p className="text-[11px] text-gray-400">{member.status === "full" ? "Di kos" : member.status === "half" ? "Setengah bulan" : "Tidak di kos"}</p>
-                  </div>
-                </div>
-                <button onClick={() => handleDeleteMember(member.id, member.name)} className="text-gray-300 transition-colors hover:text-red-400">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  </svg>
-                </button>
+                ))}
+                {activeMembers.length === 0 ? <p className="py-3 text-center text-sm text-gray-400">Belum ada member aktif.</p> : null}
               </div>
-            ))}
+            </div>
+
+            {exitedMembers.length > 0 ? (
+              <div>
+                <h3 className="mb-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Keluar ({exitedMembers.length})</h3>
+                <div className="space-y-1.5">
+                  {exitedMembers.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-2.5 opacity-90 dark:bg-[#1e1e38]">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-400 text-[10px] font-bold text-white">
+                          {member.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{member.name}</p>
+                          <p className="text-[11px] text-gray-400">
+                            Keluar {member.exitDate} · Kas terakhir {getMemberStatusLabel(member.exitKasStatus || member.status)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => handleReactivateMember(member)} className="rounded-lg border border-green-200 bg-green-50 px-2.5 py-1 text-[11px] font-medium text-green-600 transition-colors hover:bg-green-100 dark:border-green-800/40 dark:bg-green-900/20 dark:text-green-300">
+                          Aktifkan Lagi
+                        </button>
+                        <button type="button" onClick={() => handleDeleteMember(member.id, member.name)} className="text-gray-300 transition-colors hover:text-red-400" aria-label={`Hapus ${member.name}`}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -977,9 +1154,9 @@ export default function AdminPage() {
             <motion.form key="kas" onSubmit={handleAddKasManual} className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div>
                 <label className="mb-1.5 block text-xs text-gray-500 dark:text-gray-400">Member</label>
-                <select value={kasForm.memberId} onChange={(event) => setKasForm({ ...kasForm, memberId: event.target.value })} className={inputCls} required>
+                <select value={selectedKasMemberCanPay ? kasForm.memberId : ""} onChange={(event) => setKasForm({ ...kasForm, memberId: event.target.value })} className={inputCls} required>
                   <option value="">Pilih Member...</option>
-                  {members.map((member) => (
+                  {kasSelectableMembers.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.name}
                     </option>
@@ -1000,7 +1177,7 @@ export default function AdminPage() {
                   </select>
                 </div>
               </div>
-              {kasForm.memberId && kasForm.month ? (
+              {selectedKasMemberCanPay && kasForm.month ? (
                 <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50/60 p-2.5 dark:border-blue-800/30 dark:bg-blue-900/20">
                   <span className="text-xs text-gray-500 dark:text-gray-400">Akan dicatat</span>
                   <span className="text-sm font-semibold text-[var(--color-brand)]">+{formatIDR(calculateKas(kasForm.month, kasForm.status))}</span>

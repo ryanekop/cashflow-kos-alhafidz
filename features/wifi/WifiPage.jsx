@@ -46,7 +46,10 @@ export default function WifiPage({ initialData }) {
   const [wifiUsage, setWifiUsage] = useState(initialData.wifiUsage);
   const [pendingUsage, setPendingUsage] = useState(null);
 
-  const selectedMemberId = selectedMember ? parseInt(selectedMember, 10) : 0;
+  const selectedMemberValue = selectedMember ? parseInt(selectedMember, 10) : 0;
+  const selectedMemberIsActive = initialData.members.some((member) => member.id === selectedMemberValue);
+  const selectedMemberId = selectedMemberIsActive ? selectedMemberValue : 0;
+
   const isMonthOpen = openMonths.includes(month);
   const bill = initialData.wifiBills.find((entry) => entry.month === month);
   const monthUsage = useMemo(() => wifiUsage.filter((entry) => entry.month === month), [month, wifiUsage]);
@@ -70,7 +73,7 @@ export default function WifiPage({ initialData }) {
   };
 
   const handleSubmit = () => {
-    if (!selectedMember) {
+    if (!selectedMemberId) {
       showToast("Pilih nama kamu dulu!", "warning");
       return;
     }
@@ -194,7 +197,7 @@ export default function WifiPage({ initialData }) {
       <motion.div variants={fadeUp} custom={0} initial="hidden" animate="visible">
         <Card className="space-y-4 p-5">
           <Field label="Siapa kamu?">
-            <SelectInput value={selectedMember} onChange={(event) => setSelectedMember(event.target.value)}>
+            <SelectInput value={selectedMemberIsActive ? selectedMember : ""} onChange={(event) => setSelectedMember(event.target.value)}>
               <option value="">Pilih Namamu...</option>
               {initialData.members.map((member) => (
                 <option key={member.id} value={member.id}>
@@ -232,7 +235,7 @@ export default function WifiPage({ initialData }) {
         </Card>
       </motion.div>
 
-      {bill && (fullUsers + halfUsers) > 0 && selectedMember ? (
+      {bill && (fullUsers + halfUsers) > 0 && selectedMemberId ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} transition={{ duration: 0.4 }}>
           <Card className="p-5">
             <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-200">Perkiraan Tagihan WiFi</h3>

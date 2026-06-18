@@ -62,7 +62,9 @@ export default function PaymentPage({ initialData }) {
   }, [kasEntries, paymentMethod, selectedMember, wifiEntries]);
 
   const clearSavedData = () => localStorage.removeItem("payment_calc");
-  const selectedMemberId = selectedMember ? parseInt(selectedMember, 10) : 0;
+  const selectedMemberValue = selectedMember ? parseInt(selectedMember, 10) : 0;
+  const selectedMemberIsActive = initialData.members.some((member) => member.id === selectedMemberValue);
+  const selectedMemberId = selectedMemberIsActive ? selectedMemberValue : 0;
 
   const getKasAmount = (entry) => {
     if (!entry.month || !entry.status) {
@@ -131,7 +133,7 @@ export default function PaymentPage({ initialData }) {
   };
 
   const handleWhatsApp = () => {
-    if (!selectedMember) {
+    if (!selectedMemberId) {
       showToast("Pilih nama kamu dulu!", "warning");
       return;
     }
@@ -260,7 +262,7 @@ export default function PaymentPage({ initialData }) {
       <motion.div variants={fadeUp} custom={0} initial="hidden" animate="visible">
         <Card className="p-5">
           <Field label="Siapa kamu?">
-            <SelectInput value={selectedMember} onChange={(event) => setSelectedMember(event.target.value)}>
+            <SelectInput value={selectedMemberIsActive ? selectedMember : ""} onChange={(event) => setSelectedMember(event.target.value)}>
               <option value="">Pilih Namamu...</option>
               {initialData.members.map((member) => (
                 <option key={member.id} value={member.id}>
@@ -361,7 +363,7 @@ export default function PaymentPage({ initialData }) {
                 <Field label="Bulan">
                   <TextInput type="month" value={entry.month} onChange={(event) => updateWifiEntry(index, "month", event.target.value)} />
                 </Field>
-                {entry.month && selectedMember ? (
+                {entry.month && selectedMemberId ? (
                   (() => {
                     const usage = getWifiStatus(entry);
                     const amount = getWifiAmount(entry);
