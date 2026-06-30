@@ -2,6 +2,7 @@
 
 import { startTransition, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 import * as XLSX from "xlsx";
 import Modal from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
@@ -35,12 +36,38 @@ async function requestJson(url, options) {
   return data;
 }
 
+function PasswordField({ className = "", visibilityLabel = "password", ...props }) {
+  const [visible, setVisible] = useState(false);
+  const label = visible ? `Sembunyikan ${visibilityLabel}` : `Lihat ${visibilityLabel}`;
+
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={visible ? "text" : "password"}
+        className={`${inputCls} pr-11 ${className}`}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((next) => !next)}
+        className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-[#2a2a4a] dark:hover:text-gray-200"
+        aria-label={label}
+        title={label}
+      >
+        {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+      </button>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { showToast } = useToast();
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [password, setPassword] = useState("");
   const [pwError, setPwError] = useState(false);
+  const [resetForm, setResetForm] = useState({ newPassword: "", confirmPassword: "" });
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [members, setMembers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [wifiBills, setWifiBills] = useState([]);
@@ -137,6 +164,41 @@ export default function AdminPage() {
       setPwError(true);
       setTimeout(() => setPwError(false), 2000);
       showToast(error.message, "error");
+    }
+  };
+
+  const handleResetPassword = async (event) => {
+    event.preventDefault();
+
+    if (!resetForm.newPassword || !resetForm.confirmPassword) {
+      showToast("Password baru dan konfirmasi wajib diisi.", "warning");
+      return;
+    }
+
+    if (resetForm.newPassword.length < 6) {
+      showToast("Password baru minimal 6 karakter.", "warning");
+      return;
+    }
+
+    if (resetForm.newPassword !== resetForm.confirmPassword) {
+      showToast("Konfirmasi password baru tidak sama.", "warning");
+      return;
+    }
+
+    setResettingPassword(true);
+    try {
+      await requestJson("/api/admin/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resetForm),
+      });
+      setResetForm({ newPassword: "", confirmPassword: "" });
+      setAuthenticated(false);
+      showToast("Password admin berhasil direset. Silakan login kembali.", "success");
+    } catch (error) {
+      handleRequestError(error);
+    } finally {
+      setResettingPassword(false);
     }
   };
 
@@ -605,12 +667,12 @@ export default function AdminPage() {
             <p className="mt-1 text-xs text-gray-400">Masukkan password untuk melanjutkan</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-3">
-            <input
-              type="password"
+            <PasswordField
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
-              className={`${inputCls} ${pwError ? "border-red-300 focus:border-red-400 focus:ring-red-400" : ""}`}
+              className={pwError ? "border-red-300 focus:border-red-400 focus:ring-red-400" : ""}
+              visibilityLabel="password"
               autoFocus
             />
             {pwError ? <p className="text-xs text-red-500">Password salah</p> : null}
@@ -630,6 +692,7 @@ export default function AdminPage() {
     { id: "wifi", label: "Tagihan WiFi" },
     { id: "wifi-usage", label: "Isi WiFi" },
     { id: "history", label: "Riwayat" },
+    { id: "akun", label: "Akun" },
     { id: "export", label: "Export" },
   ];
 
@@ -1213,6 +1276,48 @@ export default function AdminPage() {
               </div>
             </div>
           ) : null}
+        </motion.div>
+      ) : null}
+
+      {activeTab === "akun" ? (
+        <motion.div className="surface-card space-y-5 p-5" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+          <div>
+            <h2 className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-200">Akun Admin</h2>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Reset password admin panel</p>
+          </div>
+          <form onSubmit={handleResetPassword} className="space-y-3">
+            <div>
+              <label htmlFor="new-admin-password" className="mb-1.5 block text-xs text-gray-500 dark:text-gray-400">Password baru</label>
+              <PasswordField
+                id="new-admin-password"
+                value={resetForm.newPassword}
+                onChange={(event) => setResetForm((prev) => ({ ...prev, newPassword: event.target.value }))}
+                placeholder="Password baru"
+                visibilityLabel="password baru"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="confirm-admin-password" className="mb-1.5 block text-xs text-gray-500 dark:text-gray-400">Konfirmasi password baru</label>
+              <PasswordField
+                id="confirm-admin-password"
+                value={resetForm.confirmPassword}
+                onChange={(event) => setResetForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                placeholder="Konfirmasi password baru"
+                visibilityLabel="konfirmasi password baru"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={resettingPassword}
+              className="btn-primary w-full rounded-lg py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {resettingPassword ? "Menyimpan..." : "Reset Password"}
+            </button>
+          </form>
         </motion.div>
       ) : null}
 

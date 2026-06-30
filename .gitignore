@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Excel data
 /Excel/
+
+# Local admin credential store
+/data/admin-settings.json
