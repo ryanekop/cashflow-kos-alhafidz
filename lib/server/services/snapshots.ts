@@ -12,6 +12,7 @@ export function getPaymentSnapshot() {
     members: listMembers().filter(isMemberActive),
     wifiBills: listWifiBills(),
     wifiUsage: listWifiUsage(),
+    wifiSettings: getWifiSettings(),
     transactions: listTransactions(),
   };
 }

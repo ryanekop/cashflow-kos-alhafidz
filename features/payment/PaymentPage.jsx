@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -30,6 +30,19 @@ export default function PaymentPage({ initialData }) {
   const [kasEntries, setKasEntries] = useState([{ month: "", status: "full" }]);
   const [wifiEntries, setWifiEntries] = useState([{ month: "" }]);
   const didRestoreRef = useRef(false);
+  const openWifiMonths = initialData.wifiSettings.openMonths;
+  const selectableWifiMonths = useMemo(
+    () =>
+      [
+        ...new Set([
+          ...openWifiMonths,
+          ...initialData.wifiBills.map((entry) => entry.month),
+          ...initialData.wifiUsage.map((entry) => entry.month),
+        ]),
+      ].sort().reverse(),
+    [initialData.wifiBills, initialData.wifiUsage, openWifiMonths],
+  );
+  const isWifiMonthOpen = (month) => Boolean(month && openWifiMonths.includes(month));
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -40,7 +53,13 @@ export default function PaymentPage({ initialData }) {
           if (parsed.selectedMember) setSelectedMember(parsed.selectedMember);
           if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod);
           if (parsed.kasEntries?.length) setKasEntries(parsed.kasEntries);
-          if (parsed.wifiEntries?.length) setWifiEntries(parsed.wifiEntries);
+          if (parsed.wifiEntries?.length) {
+            setWifiEntries(
+              parsed.wifiEntries.map((entry) =>
+                openWifiMonths.includes(entry.month) ? { ...entry, month: "" } : entry,
+              ),
+            );
+          }
         }
       } catch {}
 
@@ -48,7 +67,7 @@ export default function PaymentPage({ initialData }) {
     }, 0);
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [openWifiMonths]);
 
   useEffect(() => {
     if (!didRestoreRef.current) {
@@ -85,7 +104,7 @@ export default function PaymentPage({ initialData }) {
   };
 
   const getWifiAmount = (entry) => {
-    if (!entry.month || !selectedMemberId) {
+    if (!entry.month || !selectedMemberId || isWifiMonthOpen(entry.month)) {
       return 0;
     }
 
@@ -132,7 +151,7 @@ export default function PaymentPage({ initialData }) {
     setWifiEntries((entries) => (entries.length <= 1 ? [{ month: "" }] : entries.filter((_, entryIndex) => entryIndex !== index)));
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
     if (!selectedMemberId) {
       showToast("Pilih nama kamu dulu!", "warning");
       return;
@@ -143,12 +162,38 @@ export default function PaymentPage({ initialData }) {
       return;
     }
 
+    let latestOpenWifiMonths;
+    try {
+      const response = await fetch("/api/wifi-settings", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Gagal memeriksa status WiFi.");
+      }
+      const settings = await response.json();
+      latestOpenWifiMonths = Array.isArray(settings.openMonths) ? settings.openMonths : [];
+    } catch {
+      showToast("Status WiFi belum dapat diperiksa. Silakan coba lagi.", "error");
+      return;
+    }
+
+    const isCurrentlyOpen = (month) => Boolean(month && latestOpenWifiMonths.includes(month));
     const activeKas = kasEntries.filter((entry) => entry.month && getKasAmount(entry) > 0);
-    const activeWifi = wifiEntries.filter((entry) => entry.month && getWifiAmount(entry) > 0);
+    const blockedWifi = wifiEntries.filter((entry) => isCurrentlyOpen(entry.month));
+    const activeWifi = wifiEntries.filter(
+      (entry) => entry.month && !isCurrentlyOpen(entry.month) && getWifiAmount(entry) > 0,
+    );
 
     if (!activeKas.length && !activeWifi.length) {
-      showToast("Pilih minimal satu bulan untuk kas atau WiFi!", "warning");
+      showToast(
+        blockedWifi.length
+          ? "Bulan WiFi yang masih dibuka belum dapat dibayar. Tunggu sampai pengisian ditutup admin."
+          : "Pilih minimal satu bulan untuk kas atau WiFi!",
+        "warning",
+      );
       return;
+    }
+
+    if (blockedWifi.length) {
+      showToast("WiFi yang masih dibuka tidak disertakan. Pembayaran lainnya tetap dilanjutkan.", "info");
     }
 
     const issues = [];
@@ -175,12 +220,14 @@ export default function PaymentPage({ initialData }) {
       }
     }
 
+    const payableTotalWifi = activeWifi.reduce((sum, entry) => sum + getWifiAmount(entry), 0);
+    const payableTotalPayment = totalKas + payableTotalWifi;
     const url = buildWhatsAppPaymentText({
       memberName: selectedMemberName,
       paymentMethodId: paymentMethod,
       totalKas,
-      totalWifi,
-      totalPayment,
+      totalWifi: payableTotalWifi,
+      totalPayment: payableTotalPayment,
       kasMonths: activeKas.map((entry) => entry.month),
       wifiMonths: activeWifi.map((entry) => entry.month),
     });
@@ -191,8 +238,8 @@ export default function PaymentPage({ initialData }) {
       kasMonths: activeKas.map((entry) => entry.month),
       wifiMonths: activeWifi.map((entry) => entry.month),
       totalKas,
-      totalWifi,
-      totalPayment,
+      totalWifi: payableTotalWifi,
+      totalPayment: payableTotalPayment,
       url: `https://wa.me/${WHATSAPP_NUMBER}?text=${url}`,
     });
   };
@@ -361,7 +408,17 @@ export default function PaymentPage({ initialData }) {
                   ) : null}
                 </div>
                 <Field label="Bulan">
-                  <TextInput type="month" value={entry.month} onChange={(event) => updateWifiEntry(index, "month", event.target.value)} />
+                  <SelectInput value={entry.month} onChange={(event) => updateWifiEntry(index, "month", event.target.value)}>
+                    <option value="">Pilih Bulan...</option>
+                    {selectableWifiMonths.map((month) => {
+                      const isOpen = isWifiMonthOpen(month);
+                      return (
+                        <option key={month} value={month} disabled={isOpen}>
+                          {formatMonthLabel(month)}{isOpen ? " (masih dibuka — belum bisa dibayar)" : ""}
+                        </option>
+                      );
+                    })}
+                  </SelectInput>
                 </Field>
                 {entry.month && selectedMemberId ? (
                   (() => {
@@ -395,6 +452,10 @@ export default function PaymentPage({ initialData }) {
             ))}
           </AnimatePresence>
 
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Pembayaran WiFi baru dapat dilakukan setelah pengisian bulan tersebut ditutup admin.
+          </p>
+
           {totalWifi > 0 && wifiEntries.length > 1 ? (
             <motion.div className="flex items-center justify-between rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-800/30 dark:bg-purple-900/20" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}>
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total WiFi</span>
@@ -420,7 +481,9 @@ export default function PaymentPage({ initialData }) {
           ) : null}
           {totalWifi > 0 ? (
             <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-              <span>WiFi ({wifiEntries.filter((entry) => entry.month).map((entry) => entry.month).join(", ")})</span>
+              <span>
+                WiFi ({wifiEntries.filter((entry) => entry.month && !isWifiMonthOpen(entry.month)).map((entry) => entry.month).join(", ")})
+              </span>
               <span>{formatIDR(totalWifi)}</span>
             </div>
           ) : null}
